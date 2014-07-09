@@ -2,7 +2,7 @@ import collections
 import urllib2
 from bs4 import BeautifulSoup
 
-opcodes = collections.OrderedDict()
+opcodes = [None] * 256
 
 # Fetch opcode map
 
@@ -18,18 +18,20 @@ for r, row in enumerate(table.find_all('tr')[1:]):
     
     if len(cell.contents) == 1:
       continue
-      
-    opcode = hex(r) + hex(c)[2:]
 
-    instruction = cell.contents[0]
+    opcode = int(hex(r) + hex(c)[2:], 16)
     
+    instruction = cell.contents[0].encode('utf-8')  
     specs = cell.contents[2].split()
-    bytes = specs[0]
-    cycles = specs[1]
-    
+    bytes = specs[0].encode('utf-8')
+    cycles = specs[1].encode('utf-8')
+
     opcodes[opcode] = [instruction, bytes, cycles]
     
-# Format to JS
+# Output to JS
 
-for opcode, instruction in opcodes.items():
-  print('ops[%s] = [\'%s\', %s, %s]' % (opcode, instruction[0], instruction[1], instruction[2]))
+js = ('XYZ.opcodes = ' + str(opcodes) + ';').replace('None', 'null')
+
+file = open('opcodes.js', 'w')
+file.write(js)
+file.close()
