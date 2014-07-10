@@ -1,6 +1,6 @@
-var XYZ = XYZ || {};
+var X = X || {};
 
-XYZ.Utils = {
+X.Utils = {
 
 	nth_bit: function(value, n) {
 		return value & 1 << n ? 1 : 0;
@@ -26,7 +26,19 @@ XYZ.Utils = {
 		return value & 0xFFFF;
 	},
   
+  hi: function(value) {
+    return value >> 8;
+  },
+  
+  lo: function(value) {
+    return value; // TODO
+  },
+  
   hilo: function(hi, lo) {
     return hi << 8 | lo;
+  },
+  
+  random8: function() {
+    return Math.floor(Math.random() * 0xFF)
   }
 };

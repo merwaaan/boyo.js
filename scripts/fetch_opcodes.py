@@ -30,8 +30,8 @@ for r, row in enumerate(table.find_all('tr')[1:]):
     
 # Output to JS
 
-js = ('XYZ.opcodes = ' + str(opcodes) + ';').replace('None', 'null')
+js = ('opcodes: ' + str(opcodes) + ';').replace('None', 'null')
 
-file = open('opcodes.js', 'w')
-file.write(js)
-file.close()
+with open('opcodes.txt', 'w') as file:
+  file.write(js)
+  file.close()

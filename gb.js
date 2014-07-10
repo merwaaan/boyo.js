@@ -1,10 +1,25 @@
-var XYZ = XYZ || {};
+var X = X || {};
 
-XYZ.GB = {
-
+X.GB = {
+  
   run: function() {
-    XYZ.CPU.init();
+  
+    X.CPU.init();
+    //X.CPU.reset();
+    /*for (var i = 0; i < 10; ++i) {
+      X.CPU.step();
+    }*/
+    
+    //X.Debugger.init();
+  },
+  
+  test: function() {
+  
+    X.CPU.init();
+    mocha.setup('bdd');
+    mocha.run();
   }
+  
 };
 
 /*
@@ -24,7 +39,7 @@ GB.prototype.reset = function() {
 	this.cpu.reset();
 }
 
-XYZ.prototype.run = function() {
+X.prototype.run = function() {
 
   this.reset();
   
