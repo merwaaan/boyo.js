@@ -19,7 +19,7 @@ X.Debugger = {
     }.bind(this));
     
     // Memory
-    
+    /*
     var table = document.querySelector('table#memory');
     for (var c = 0; c < 50; ++c) {
       var row = table.appendChild(document.createElement('tr'));
@@ -29,7 +29,7 @@ X.Debugger = {
     
     watch(X.CPU.memory, function(prop, action, new_value) {
       this.memory[prop].innerHTML = '0x' + new_value.toString(16);
-    }.bind(this));
+    }.bind(this));*/
   },
   
 };

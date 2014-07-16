@@ -3,7 +3,7 @@ var X = X || {};
 X.Utils = {
 
 	nth_bit: function(value, n) {
-		return value & 1 << n ? 1 : 0;
+		return !!(value & 1 << n);
 	},
 	
   sign: function(value) {
@@ -15,7 +15,7 @@ X.Utils = {
 	},
   
   signed: function(value) {  
-    return Utils.nth_bit(value, 7) * -128 + (value & ~(1 << 7));
+    return this.nth_bit(value, 7) * -128 + (value & ~(1 << 7));
   },
   
 	wrap8: function(value) {

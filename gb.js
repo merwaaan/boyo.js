@@ -5,12 +5,12 @@ X.GB = {
   run: function() {
   
     X.CPU.init();
-    //X.CPU.reset();
-    /*for (var i = 0; i < 10; ++i) {
-      X.CPU.step();
-    }*/
-    
     //X.Debugger.init();
+    X.CPU.reset();
+    for (var i = 0; i < 1000000; ++i) {
+      X.CPU.step();
+    }
+    
   },
   
   test: function() {
