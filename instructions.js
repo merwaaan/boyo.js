@@ -1,4 +1,8 @@
-(function(globals) {
+var X = X || {};
+
+X.InstructionImplementations = (function() {
+
+  'use strict'
 
   /**
     *
@@ -6,7 +10,7 @@
     *
     */
     
-  globals.InstructionImplementations = {
+  return {
 
     /**
       *
@@ -484,4 +488,4 @@
     
   };
 
-})(X || {})
+})();

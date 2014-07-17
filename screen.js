@@ -1,15 +1,11 @@
-var Screen = function(famicom) {
+var X = X ||{};
+
+X.Screen = (function() {
 
   'use strict';
-  
-	var famicom = famicom;
 
-  var memory = new Array(0x4000);
-  
   return {
-  
-    
 
   };
-  
-};
+
+})();

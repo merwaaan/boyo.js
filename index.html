@@ -1,18 +1,18 @@
  <!doctype html>
 <head>
   <meta charset="utf-8">
-	<script type="text/JavaScript" src="utils.js"></script>
-	<script type="text/JavaScript" src="instructions.js"></script>
-	<script type="text/JavaScript" src="cpu.js"></script>
-	<script type="text/JavaScript" src="ppu.js"></script>
-	<script type="text/JavaScript" src="rom.js"></script>
-	<script type="text/JavaScript" src="screen.js"></script> 
-	<script type="text/JavaScript" src="gb.js"></script> 
-	<script type="text/JavaScript" src="debugger.js"></script> 
+	<script src="utils.js"></script>
+	<script src="instructions.js"></script>
+	<script src="cpu.js"></script>
+	<script src="ppu.js"></script>
+	<script src="rom.js"></script>
+	<script src="screen.js"></script> 
+	<script src="gb.js"></script> 
+	<script src="debugger.js"></script> 
   
-	<script type="text/JavaScript" src="libs/watch.js"></script>  
-  <script type="text/JavaScript" src="libs/mocha.js"></script>
-	<script type="text/JavaScript" src="libs/chai.js"></script>
+	<script src="libs/watch.js"></script>  
+  <script src="libs/mocha.js"></script>
+	<script src="libs/chai.js"></script>
   
   <link rel="stylesheet" type="text/css" href="screen.css"/>
   <link rel="stylesheet" type="text/css" href="libs/mocha.css"/>
@@ -24,7 +24,11 @@
   <input type="file" id="rom_file"/>
   
   <section id="debugger">
-  
+
+    <button>Pause</button>
+    <button>Step</button>
+    <button>Run</button>
+
     <table id="registers">
       <tr><td>A<span></span></td><td>F<span></span></td></tr>
       <tr><td>B<span></span></td><td>C<span></span></td></tr>
@@ -32,8 +36,16 @@
       <tr><td>H<span></span></td><td>L<span></span></td></tr>
     </table>
     
+    <input type="text">
+    <button>Go to address</button>
     <table id="memory">
-    
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
+      <tr><td></td><td></td></tr>
     </table>
     
   </section>
@@ -41,7 +53,7 @@
 	<script>
 	window.addEventListener('load', function() {
   
-    X.GB.run();
+    X.GB.init();
 
     //mocha.run();
     
