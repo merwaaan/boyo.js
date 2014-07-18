@@ -10,7 +10,8 @@
 	<script src="gb.js"></script> 
 	<script src="debugger.js"></script> 
   
-	<script src="libs/watch.js"></script>  
+  <script src="libs/underscore.js"></script>  
+  <script src="libs/watch.js"></script>  
   <script src="libs/mocha.js"></script>
 	<script src="libs/chai.js"></script>
   
@@ -30,24 +31,31 @@
     <button>Run</button>
 
     <table id="registers">
-      <tr><td>A<span></span></td><td>F<span></span></td></tr>
-      <tr><td>B<span></span></td><td>C<span></span></td></tr>
-      <tr><td>D<span></span></td><td>E<span></span></td></tr>
-      <tr><td>H<span></span></td><td>L<span></span></td></tr>
+      <tr><td>AF<td></td></tr>
+      <tr><td>BC<td></td></tr>
+      <tr><td>DE<td></td></tr>
+      <tr><td>HL<td></td></tr>
+      <tr><td>PC<td></td></tr>
+      <tr><td>SP<td></td></tr>
     </table>
     
-    <input type="text">
-    <button>Go to address</button>
+    <input type="text" name="address" value="0"/>
+    <button name="go_to_address">Go to address</button>
     <table id="memory">
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
-      <tr><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
+      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
     </table>
     
+    <div id="log"></div>
+
   </section>
 
 	<script>

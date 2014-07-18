@@ -35,7 +35,7 @@ X.Utils = (function() {
     },
     
     lo: function(value) {
-      return value; // TODO
+      return value & 0x00FF;
     },
     
     hilo: function(hi, lo) {
@@ -44,7 +44,16 @@ X.Utils = (function() {
     
     random8: function() {
       return Math.floor(Math.random() * 0xFF)
+    },
+
+    hex8: function(value) {
+      return '0x' + value.toString(16).toUpperCase();
+    },
+
+    hex16: function(value) {
+      return '0x' + value.toString(16).toUpperCase();
     }
+
   };
 
 })();

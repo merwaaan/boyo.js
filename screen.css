@@ -6,3 +6,8 @@ table {
 td {
   border: 1px solid gray;
 }
+
+table#registers span {
+
+	margin-left: 1em;
+}

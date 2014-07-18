@@ -92,11 +92,11 @@ X.CPU = (function() {
       var instruction = this.instructions[opcode];
       var bytes = parseInt(X.InstructionImplementations.opcodes[opcode][1]); // later -> just store length and cycles as numbers
       var cycles = parseInt(X.InstructionImplementations.opcodes[opcode][2]);
-      //this.log(this.opcodes[opcode], instruction, bytes, cycles);
-      
+      //X.Debugger.log(this.opcodes[opcode], instruction, bytes, cycles);
+      X.Debugger.log_instruction(opcode);
       var operands = this.memory.slice(this.PC + 1, this.PC + bytes);
       //this.log(operands.map(function(x){ return x.toString(16); }));
-      console.log(opcode.toString(16),instruction,this.PC, bytes);
+      //  console.log(opcode.toString(16),instruction,this.PC, bytes);
       // Execute
       
       this.PC += bytes;

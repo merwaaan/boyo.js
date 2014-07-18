@@ -10,26 +10,24 @@ X.GB = (function() {
 
       X.CPU.init();
       X.Debugger.init();
-
-      return;
-
-      for (var i = 0; i < 1000000; ++i)
-        X.CPU.step();
-    },
-
-    pause: function() {
-      
-      //X.CPU.pause();
     },
 
     step: function() {
+
       X.CPU.step();
     },
 
     run: function() {
-      //X.CPU.run();
 
+      for (var i = 0; i < 1000; ++i) {
+
+        if (X.Debugger.reached_breakpoint())
+          return;
+
+        X.GB.step();
+      }
     }
+
   };
 
 })();
