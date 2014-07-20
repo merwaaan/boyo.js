@@ -19,7 +19,7 @@ X.GB = (function() {
 
     run: function() {
 
-      for (var i = 0; i < 1000; ++i) {
+      for (var i = 0; i < 50000; ++i) {
 
         if (X.Debugger.reached_breakpoint())
           return;

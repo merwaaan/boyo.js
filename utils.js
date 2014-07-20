@@ -6,6 +6,12 @@ X.Utils = (function() {
 
   return {
 
+    /**
+      *
+      * Bitwise operations
+      *
+      */
+
   	nth_bit: function(value, n) {
   		return !!(value & 1 << n);
   	},
@@ -45,6 +51,12 @@ X.Utils = (function() {
     random8: function() {
       return Math.floor(Math.random() * 0xFF)
     },
+
+    /**
+      *
+      * Misc.
+      *
+      */
 
     hex8: function(value) {
       return '0x' + value.toString(16).toUpperCase();

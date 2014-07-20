@@ -1,3 +1,7 @@
+* {
+	margin: 0;
+}
+
 table {
   border: 1px solid black;
   border-collapse: collapse;
@@ -7,7 +11,28 @@ td {
   border: 1px solid gray;
 }
 
-table#registers span {
+header {
+	background-color: #F56991;
+}
+
+section#game {
+	background-color: #D1F2A5;
+}
+
+section#debugger {
+	background-color: #EFFAB4;
+}
+
+footer {
+	background-color: #FF9F80;
+}
+
+section#registers td {
+
+	padding: 0.3em;
+}
+
+section#registers td span {
 
 	margin-left: 1em;
 }

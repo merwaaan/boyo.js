@@ -224,6 +224,10 @@
 
     var unwatch = function () {
 
+        // hack before I find a cleaner solution
+        unwatch2.apply(this, arguments);
+        return;
+
         if (isFunction(arguments[1])) {
             unwatchAll.apply(this, arguments);
         } else if (isArray(arguments[1])) {
@@ -377,6 +381,20 @@
         }
 
         removeFromLengthSubjects(obj, prop, watcher);
+    };
+
+    var unwatch2 = function (obj) {
+        for (var w in obj.watchers) {
+           obj.watchers[w] = [];
+        }
+
+        for (var i=0; i<lengthsubjects.length; i++) {
+            var subj = lengthsubjects[i];
+
+            if (subj.obj == obj ) {
+                lengthsubjects.splice(i, 1);
+            }
+        }
     };
 
     var loop = function(){

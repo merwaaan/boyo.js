@@ -30,7 +30,7 @@ X.CPU = (function() {
     get addsub() { return this.get_flag(1 << 6); }, set addsub(x) { this.set_flag(1 << 6, x); },
     get zero() { return this.get_flag(1 << 7); }, set zero(x) { this.set_flag(1 << 7, x); },
 
-    flag_names: ['carry', 'halfcarry', 'addsub', 'zero'],
+    flag_names: ['zero', 'addsub', 'halfcarry', 'carry'],
     
     set flags(flags) {
       for (var i in this.flag_names)
@@ -77,31 +77,26 @@ X.CPU = (function() {
         this.memory[i] = bios[i];
     },
 
-    
-    i: 0,
     step: function() {
       
       // Fetch
-      
-      //this.log('PC', this.PC.toString(16));
 
       var opcode = this.memory[this.PC];
-      opcode = opcode == 0xCB ? 0x100 + this.memory[this.PC + 1] : opcode;
-      //this.log('opcode', opcode.toString(16));  
+      opcode = opcode == 0xCB ? 0x100 + this.memory[this.PC + 1] : opcode;  
 
       var instruction = this.instructions[opcode];
       var bytes = parseInt(X.InstructionImplementations.opcodes[opcode][1]); // later -> just store length and cycles as numbers
       var cycles = parseInt(X.InstructionImplementations.opcodes[opcode][2]);
-      //X.Debugger.log(this.opcodes[opcode], instruction, bytes, cycles);
-      X.Debugger.log_instruction(opcode);
+
       var operands = this.memory.slice(this.PC + 1, this.PC + bytes);
-      //this.log(operands.map(function(x){ return x.toString(16); }));
-      //  console.log(opcode.toString(16),instruction,this.PC, bytes);
+
       // Execute
       
+      X.Debugger.log_instruction(opcode);
+
       this.PC += bytes;
       instruction(this, operands);
-      ++this.i;
+
       // Check for interrupts
       
       // ...

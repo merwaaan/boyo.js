@@ -11,52 +11,73 @@
 	<script src="debugger.js"></script> 
   
   <script src="libs/underscore.js"></script>  
-  <script src="libs/watch.js"></script>  
-  <script src="libs/mocha.js"></script>
-	<script src="libs/chai.js"></script>
+  <script src="libs/watch.js"></script>
   
   <link rel="stylesheet" type="text/css" href="screen.css"/>
-  <link rel="stylesheet" type="text/css" href="libs/mocha.css"/>
 </head>
 <body>
-  
-  <div id="mocha"></div>
 
-  <input type="file" id="rom_file"/>
+  <header>
+    a
+  </header>
+
+  <section id="game">
+    <canvas width="1" height="1"/>
+    <input type="file" id="rom_file"/>
+  </section>
   
   <section id="debugger">
 
-    <button>Pause</button>
-    <button>Step</button>
-    <button>Run</button>
+    <section id="buttons">
+      <button>Pause</button>
+      <button>Step</button>
+      <button>Run</button>
+    </section>
+    
+    <section id="registers">
+      <table>
+        <tr><td>A<span></span></td><td>F<span></span></td></tr>
+        <tr><td>B<span></span></td><td>C<span></span></td></tr>
+        <tr><td>D<span></span></td><td>E<span></span></td></tr>
+        <tr><td>H<span></span></td><td>L<span></span></td></tr>
+        <tr><td colspan="2">PC<span></span></td></tr>
+        <tr><td colspan="2">SP<span></span></td></tr>
+      </table>
+    </section>
 
-    <table id="registers">
-      <tr><td>AF<td></td></tr>
-      <tr><td>BC<td></td></tr>
-      <tr><td>DE<td></td></tr>
-      <tr><td>HL<td></td></tr>
-      <tr><td>PC<td></td></tr>
-      <tr><td>SP<td></td></tr>
-    </table>
-    
-    <input type="text" name="address" value="0"/>
-    <button name="go_to_address">Go to address</button>
-    <table id="memory">
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-      <tr><td><input type="checkbox"/></td><td></td><td></td></tr>
-    </table>
-    
+    <section id="flags">
+      <input type="checkbox" name="zero"/><label>Z</label>
+      <input type="checkbox" name="addsub"/><label>N</label>
+      <input type="checkbox" name="halfcarry"/><label>H</label>
+      <input type="checkbox" name="carry"/><label>C</label>
+    </section>
+
+    <section id="memory">
+      <input type="text" name="address" value="0"/>
+      <button name="go_to_address">Go to address</button>
+      <table>
+        <tr><td></td><td></td></tr>
+        <tr><td></td><td></td></tr>
+        <tr><td></td><td></td></tr>
+        <tr><td></td><td></td></tr>
+        <tr><td></td><td></td></tr>
+      </table>
+    </section>
+
+    <section id="breakpoints">
+      <input type="text" name="breakpoint"/>
+      <button name="add_breakpoint">Add breakpoint</button>
+      <ul>
+      </ul>
+    </section>
+
     <div id="log"></div>
 
   </section>
+
+  <footer>
+    f
+  </footer>
 
 	<script>
 	window.addEventListener('load', function() {
