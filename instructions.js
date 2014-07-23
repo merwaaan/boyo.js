@@ -14,7 +14,7 @@ X.InstructionImplementations = (function() {
 
     /**
       *
-      * List of opcodes fetched from http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html
+      * List of opcodes fetched from http://www.pastraiser.com/X.CPU/gameboy/gameboy_opcodes.html
       *
       */
 
@@ -26,10 +26,10 @@ X.InstructionImplementations = (function() {
       *
       */
       
-    generate: function(cpu) {
+    generate: function() {
 
       return this.opcodes.map(function(specs, opcode) {
-        return specs ? this.generate_instruction(cpu, opcode, specs) : null;
+        return specs ? this.generate_instruction(opcode, specs) : null;
       }, this);
     },
     
@@ -39,7 +39,7 @@ X.InstructionImplementations = (function() {
       *
       */
     
-    generate_instruction: function(cpu, opcode, specs) {
+    generate_instruction: function(opcode, specs) {
 
       var parts = specs[0].split(' ');
       var instruction_name = parts[0];
@@ -47,7 +47,7 @@ X.InstructionImplementations = (function() {
 
       var parameters = parameter_names ?
         parameter_names.split(',').map(function(parameter_name) {
-          return this.generate_parameter(cpu, opcode, parameter_name);
+          return this.generate_parameter(opcode, parameter_name);
         }, this) :
         null;
 
@@ -60,14 +60,14 @@ X.InstructionImplementations = (function() {
       *
       */
       
-    generate_parameter: function(cpu, opcode, parameter_name) {
+    generate_parameter: function(opcode, parameter_name) {
       
       // Special cases
       // TODO handle those cleanly
 
       if (parameter_name == 'SP+r8') { // Weird LD
         return {
-          get: function(operands) { return cpu.SP + operands[0]; }
+          get: function(operands) { return X.CPU.SP + operands[0]; }
         };
       }
 
@@ -79,8 +79,8 @@ X.InstructionImplementations = (function() {
 
       if (core.match(/^[A-Z]+$/)) { // Register
         parameter = {
-          get: function(operands) { return cpu[core]; },
-          set: function(operands, value) { cpu[core] = value; }
+          get: function(operands) { return X.CPU[core]; },
+          set: function(operands, value) { X.CPU[core] = value; }
         };
       }
       else if (core.match(/^(d8|a8|r8)$/)) { // Immediate 8-bit value
@@ -105,7 +105,7 @@ X.InstructionImplementations = (function() {
         };
       }
       else if (core.match(/^\$FF00\+(C|a8)$/)) { // Zero-page
-        var p = this.generate_parameter(cpu, opcode, _.last(core) === 'C' ? 'C' : 'a8');
+        var p = this.generate_parameter(opcode, _.last(core) === 'C' ? 'C' : 'a8');
         parameter = {
           get: function(operands) { return 0xFF00 + p.get(operands); }
         };
@@ -114,7 +114,7 @@ X.InstructionImplementations = (function() {
         var state = parameter_name[1] == 'N' ? false : true;
         var flag = _.last(parameter_name) == 'Z' ? 'zero' : 'carry';
         parameter = {
-          get: function(operands) { return cpu[flag] == state; }
+          get: function(operands) { return X.CPU[flag] == state; }
         };
       }
       
@@ -126,8 +126,8 @@ X.InstructionImplementations = (function() {
       
       if (parameter_name[0] == '(') {
         return {
-          get: function(operands) { return cpu.memory[parameter.get(operands)]; },
-          set: function(operands, value) { cpu.memory[parameter.get(operands)] = value; }
+          get: function(operands) { return X.Memory.r(parameter.get(operands)); },
+          set: function(operands, value) { X.Memory.w(parameter.get(operands), value); }
         };
       }
       
@@ -141,351 +141,376 @@ X.InstructionImplementations = (function() {
       */
     
     'ADC': function(parameters) {
-      return function(cpu, operands) {
-        parameters[0].set(parameters[0].get(operands) + parameters[1].get(operands) + cpu.carry); // TODO wrap???
-        cpu.flags = [cpu.A === 0, false, true, true]; // TODO H,C
+      return function(operands) {
+        var a = parameters[0].get(operands);
+        var b = parameters[1].get(operands);
+        var x = X.Utils.wrap8(a + b + X.CPU.carry);
+        parameters[0].set(operands, x);
+        X.CPU.flags = [x === 0, false, (a & 0xF) + (b & 0xF) + (X.CPU.carry & 0xF) > 0xF, a + b + X.CPU.carry > 0xFF];
       };
     },
     
     'ADD': function(parameters) {
-      return function(cpu, operands) {
-        parameters[0].set(parameters[0].get(operands) + parameters[1].get(operands)); // TODO wrap???
-        cpu.flags = [cpu.A === 0, false, true, true]; // TODO H,C
+      return function(operands) {
+        var a = parameters[0].get(operands);
+        var b = parameters[1].get(operands);
+        var x = X.Utils.wrap8(a + b);
+        parameters[0].set(x);
+        X.CPU.flags = [x === 0, false, (a & 0xF) + (b & 0xF) > 0xF, a + b > 0xFF];
       };
     },
     
     'AND': function(parameters) {
-      return function(cpu, operands) {
-        cpu.A &= parameters[0].get(operands);
-        cpu.flags = [cpu.A === 0, false, true, false];
+      return function(operands) {
+        X.CPU.A &= parameters[0].get(operands);
+        X.CPU.flags = [X.CPU.A === 0, false, true, false];
       };
     },
     
     'BIT': function(parameters) {
-      return function(cpu, operands) {
-        cpu.flags = [!X.Utils.nth_bit(parameters[1].get(), parameters[0].get()), false, true, undefined];
+      return function(operands) {
+        X.CPU.flags = [!X.Utils.nth_bit(parameters[1].get(), parameters[0].get()), false, true, undefined];
       };
     },
     
     'CALL': function(parameters) {
-      return function(cpu, operands) {
-        cpu.push(cpu.PC);
-        cpu.PC = parameters[0].get(operands);
+      return function(operands) {
+        X.CPU.push(X.Utils.hi(X.CPU.PC));
+        X.CPU.push(X.Utils.lo(X.CPU.PC));
+        X.CPU.PC = parameters[0].get(operands);
       };
     },
     
     'CCF': function(parameters) {
-      return function(cpu, operands) {
-        cpu.carry = !cpu.carry;
+      return function(operands) {
+        X.CPU.flags = [undefined, false, false, !X.CPU.carry];
       };
     },
     
     'CP': function(parameters) {
-      return function(cpu, operands) {
-        var sub = cpu.A - parameters[0].get(operands);
-        cpu.zero = true; // TODO
-        cpu.addsub = true;
-        cpu.halfcarry = true; // TODO
-        cpu.Carry = true; // TODO
+      return function(operands) {
+        var x = parameters[0].get(operands);
+        var sub = X.CPU.A - x;
+        X.CPU.flags = [sub === 0, true, X.CPU.A & 0xF < x & 0xF, X.CPU.A < x];
       };
     },
     
     'CPL': function(parameters) {
-      return function(cpu, operands) {
-        cpu.A = ~cpu.A;
-        cpu.flags = [undefined, true, true, undefined];
+      return function(operands) {
+        X.CPU.A = ~X.CPU.A;
+        X.CPU.flags = [undefined, true, true, undefined];
       };
     },
     
     'DAA': function(parameters) {
-      return function(cpu, operands) {
-        // Nothing
-        cpu.zero = cpu.A == 0;
-        cpu.halfcarry = false;
-        cpu.carry = true; // TODO
+      return function(operands) {
+        // TODO
+        X.CPU.flags = [X.CPU.A === 0, undefined, false, undefined]; // TODO C
       };
     },
     
     'DEC': function(parameters) {
-      return function(cpu, operands) {
-        parameters[0].set(operands, parameters[0].get(operands) - 1); // TODO wrap???
+      return function(operands) {
+        var x = parameters[0].get(operands) - 1; // TODO wrap!!
+        parameters[0].set(operands, x);
+        X.CPU.flags = [x === 0, true, !(x & 0x0F), undefined];
       };
     },
     
     'DI': function(parameters) {
-      return function(cpu, operands) {
-        // Disable interrupts (after the following instruction???)
+      return function(operands) {
+        X.CPU.interrupt_master_enable = false;
       };
     },
     
     'EI': function(parameters) {
-      return function(cpu, operands) {
-        // Enable interrupts (same???)
+      return function(operands) {        
+        X.CPU.interrupt_master_enable = true;
       };
     },
     
     'HALT': function(parameters) {
-      return function(cpu, operands) {
+      return function(operands) {
         console.log('HALT');
       };
     },
     
     'INC': function(parameters) {
-      return function(cpu, operands) {
-        parameters[0].set(operands, parameters[0].get(operands) + 1); // TODO wrap???
-        cpu.flags = [parameters[0].get(operands) === 0, false, true, undefined]; // TODO HC
+      return function(operands) {
+        var x = parameters[0].get(operands) + 1; // TODO wrap!!
+        parameters[0].set(operands, x);
+        X.CPU.flags = [x === 0, false, !(x & 0x0F), undefined];
       };
     },
     
     'JP': function(parameters) {
       return parameters.length == 1 ?
-        function(cpu, operands) {
-          cpu.PC = parameters[0].get(operands);
+        function(operands) {
+          X.CPU.PC = parameters[0].get(operands);
         } :
-        function(cpu, operands) {
+        function(operands) {
           if (parameters[0].get(operands)) {
-            cpu.PC += X.Utils.signed(parameters[1].get(operands));
+            X.CPU.PC += X.Utils.signed(parameters[1].get(operands));
           }
         };
     },
     
     'JR': function(parameters) {
       return parameters.length == 1 ?
-        function(cpu, operands) {
-          cpu.PC += X.Utils.signed(parameters[0].get(operands));
+        function(operands) {
+          X.CPU.PC += X.Utils.signed(parameters[0].get(operands));
         } :
-        function(cpu, operands) {
+        function(operands) {
           if (parameters[0].get(operands)) {
-            cpu.PC += X.Utils.signed(parameters[1].get(operands));
+            X.CPU.PC += X.Utils.signed(parameters[1].get(operands));
           }
         };
     },
     
     'LD': function(parameters) {
-      return function(cpu, operands) {
+      return function(operands) {
         parameters[0].set(operands, parameters[1].get(operands));
       };
     },
     
     'LDD': function(parameters) {
       var ld = this.LD(parameters);
-      return function(cpu, operands) {
-        ld(cpu, operands);
-        cpu.HL = cpu.HL - 1;
+      return function(operands) {
+        ld(operands);
+        X.CPU.HL = X.CPU.HL - 1;
       };
     },
     
     'LDI': function(parameters) {
       var ld = this.LD(parameters);
-      return function(cpu, operands) {
-        ld(cpu, operands);
-        cpu.HL = cpu.HL + 1;
+      return function(operands) {
+        ld(operands);
+        X.CPU.HL = X.CPU.HL + 1;
       };
     },
     
     'NOP': function(parameters) {
-      return function(cpu, operands) { };
+      return function(operands) { };
     },
     
     'OR': function(parameters) {
-      return function(cpu, operands) {
-        cpu.A |= parameters[0].get(operands);
-        cpu.flags = [cpu.flags == 0, false, false, false];
+      return function(operands) {
+        X.CPU.A |= parameters[0].get(operands);
+        X.CPU.flags = [X.CPU.flags == 0, false, false, false];
       };
     },
     
     'POP': function(parameters) {
-      return function(cpu, operands) {
-        var lo = cpu.pop();
-        var hi = cpu.pop();
-        parameters[0].set(X.Utils.hilo(hi, lo));
+      return function(operands) {
+        var lo = X.CPU.pop();
+        var hi = X.CPU.pop();
+        parameters[0].set(operands, X.Utils.hilo(hi, lo));
       };
     },
     
     'PUSH': function(parameters) { // TODO
-      return function(cpu, operands) {
+      return function(operands) {
         var pair = parameters[0].get(operands);
-        cpu.push(parameters[0].get(X.Utils.hi(pair)));
-        cpu.push(parameters[1].get(X.Utils.lo(pair)));
+        X.CPU.push(X.Utils.hi(pair));
+        X.CPU.push(X.Utils.lo(pair));
       };
     },
     
     'RES': function(parameters) {
-      return function(cpu, operands) {
+      return function(operands) {
         parameters[1].set(operands, parameters[1].get(operands) & ~(1 << parameters[0].get(operands)));
       };
     },
     
     'RET': function(parameters) {
-      return parameters === undefined ?
-        function(cpu, operands) {
-          var hi = cpu.pop();
-          var lo = cpu.pop();
-          cpu.PC = X.Utils.hilo(hi, lo);
-        } :
-        function(cpu, operands) {
+      return parameters ?
+        function(operands) {con
           if (parameters[0].get(operands)) {
-            var hi = cpu.pop();
-            var lo = cpu.pop();
-            cpu.PC = X.Utils.hilo(hi, lo);
+            var lo = X.CPU.pop();
+            var hi = X.CPU.pop();
+            X.CPU.PC = X.Utils.hilo(hi, lo);
           }
+        } :
+        function(operands) {
+          var lo = X.CPU.pop();
+          var hi = X.CPU.pop();
+          X.CPU.PC = X.Utils.hilo(hi, lo);
         };
     },
     
     'RETI': function(parameters) {
       var ret = this.RET(parameters);
-      return function(cpu, operands) {
-        ret(cpu, operands);
-        // enable interrupts
+      var ei = this.EI(parameters);
+      return function(operands) {
+        ret(operands);
+        ei(operands);
       };
     },
     
     'RL': function(parameters) {
-      return function(cpu, operands) {
-        var bit7 = X.Utils.nth_bit(parameters[0].get(operands), 7);
-        parameters[0].set(operands, parameters[0].get(operands) << 1 | cpu.carry);
-        cpu.flags = [parameters[0].get(operands) === 0, false, false, bit7];
+      return function(operands) {
+        var x = parameters[0].get(operands);
+        var bit7 = X.Utils.nth_bit(x, 7);
+        x <<= 1;
+        x = X.Utils.wrap8(x | X.CPU.carry);
+        parameters[0].set(operands, x);
+        X.CPU.flags = [x === 0, false, false, bit7];
       };
     },
     
     'RLA': function(parameters) {
-      return function(cpu, operands) {
-        var bit7 = X.Utils.nth_bit(cpu.A, 7);
-        cpu.A <<= 1;
-        cpu.A |= cpu.carry;
-        cpu.flags = [cpu.A === 0, false, false, bit7];
+      return function(operands) {
+        var bit7 = X.Utils.nth_bit(X.CPU.A, 7);
+        X.CPU.A = X.Utils.wrap8(X.CPU.A << 1 | X.CPU.carry);
+        X.CPU.flags = [X.CPU.A === 0, false, false, bit7];
       };
     },
     
     'RLC': function(parameters) {
-      return function(cpu, operands) {
-        // Nothing
+      return function(operands) {
+        var x = parameters[0].get(operands);
+        var bit7 = X.Utils.nth_bit(x, 7);
+        x = X.Utils.wrap8(X.CPU.A << 1 | bit7);
+        parameters[0].set(operands, x);
+        X.CPU.flags = [x === 0, false, false, bit7];
       };
     },
     
     'RLCA': function(parameters) {
-      return function(cpu, operands) {
-        var bit7 = X.Utils.nth_bit(cpu.A, 7);
-        cpu.A <<= 1;
-        cpu.A |= bit7;
-        cpu.flags = [cpu.A === 0, false, false, bit7];
+      return function(operands) {
+        var bit7 = X.Utils.nth_bit(X.CPU.A, 7);
+        X.CPU.A = X.Utils.wrap8(X.CPU.A << 1 | bit7);
+        X.CPU.flags = [X.CPU.A === 0, false, false, bit7];
       };
     },
     
     'RR': function(parameters) {
-      return function(cpu, operands) {
-        var bit0 = X.Utils.nth_bit(parameters[0].get(operands), 0);
-        parameters[0].set(operands, parameters[0].get(operands) >> 1 | cpu.carry << 7);
-        cpu.flags = [parameters[0].get(operands) === 0, false, false, bit0];
+      return function(operands) {
+        var x = parameters[0].get(operands);
+        var bit0 = X.Utils.nth_bit(x, 0);
+        x >>= 1;
+        x |= X.CPU.carry << 7;
+        parameters[0].set(operands, x);
+        X.CPU.flags = [x === 0, false, false, bit0];
       };
     },
     
     'RRA': function(parameters) {
-      return function(cpu, operands) {
-        var bit0 = X.Utils.nth_bit(cpu.A, 0);
-        cpu.A >>= 1;
-        cpu.A |= cpu.carry << 7;
-        cpu.flags = [cpu.A === 0, false, false, bit0];
+      return function(operands) {
+        var bit0 = X.Utils.nth_bit(X.CPU.A, 0);
+        X.CPU.A >>= 1;
+        X.CPU.A |= X.CPU.carry << 7;
+        X.CPU.flags = [X.CPU.A === 0, false, false, bit0];
       };
     },
     
     'RRC': function(parameters) {
-      return function(cpu, operands) {
-        // Nothing
+      return function(operands) {
+        var x = parameters[0].get(operands);
+        var bit0 = X.Utils.nth_bit(x, 0);
+        x >>= 1;
+        x |= bit0 << 7;
+        parameters[0].set(operands, x);
+        X.CPU.flags = [x === 0, false, false, bit0]
       };
     },
     
     'RRCA': function(parameters) {
-      return function(cpu, operands) {
-        var bit0 = X.Utils.nth_bit(cpu.A, 0);
-        cpu.A >>= 1;
-        cpu.A |= bit0 << 7;
-        cpu.flags = [cpu.A === 0, false, false, bit0];
+      return function(operands) {
+        var bit0 = X.Utils.nth_bit(X.CPU.A, 0);
+        X.CPU.A >>= 1;
+        X.CPU.A |= bit0 << 7;
+        X.CPU.flags = [X.CPU.A === 0, false, false, bit0];
       };
     },
     
     'RST': function(parameters) {
-      return function(cpu, operands) {
-        cpu.push(cpu.PC);
-        cpu.PC = parameters[0].get(operands);
+      return function(operands) {
+        X.CPU.push(X.Utils.hi(X.CPU.PC));
+        X.CPU.push(X.Utils.lo(X.CPU.PC));
+        X.CPU.PC = parameters[0].get(operands);
       };
     },
     
     'SBC': function(parameters) {
-      return function(cpu, operands) {
-        parameters[0].set(operands, parameters[0].get(operands) - parameters[1].get(operands) - cpu.carry); // TODO wrap???
-        cpu.flags = [cpu.A === 0, true, true, true]; // TODO H,C
+      return function(operands) {
+        var x = parameters[0].get(operands);
+        X.CPU.A = X.Utils.wrap8(X.CPU.A - x - X.CPU.carry);
+        X.CPU.flags = [X.CPU.A === 0, true, X.CPU.A & 0xF < (x & 0xF) + (X.CPU.carry & 0xF), X.CPU.A < x + X.CPU.carry];
       };
     },
     
     'SCF': function(parameters) {
-      return function(cpu, operands) {
-        cpu.carry = true;
+      return function(operands) {
+        X.CPU.flags = [undefined, false, false, true];
       };
     },
     
     'SET': function(parameters) {
-      return function(cpu, operands) {
+      return function(operands) {
         parameters[1].set(operands, parameters[1].get(operands) | 1 << parameters[0].get(operands));
       };
     },
     
-    'SLA': function(parameters) {// TODO bit 7 should not change??? (>>> ??)
-      return function(cpu, operands) {
+    'SLA': function(parameters) {
+      return function(operands) {
         var x = parameters[0].get(operands);
         var bit7 = Utils.nth_bit(x, 7);
-        x << 1;
+        x = X.Utils.wrap8(x << 1);
         parameters[0].set(operands, x);
-        cpu.flags = [x === 0, false, false, bit7];
+        X.CPU.flags = [x === 0, false, false, bit7];
       };
     },
     
     'SRA': function(parameters) {
-      return function(cpu, operands) { // TODO bit 7 should not change??? (>>> ??)
+      return function(operands) {
         var x = parameters[0].get(operands);
         var bit0 = Utils.nth_bit(x, 0);
-        x >> 1;
+        var bit7 = Utils.nth_bit(x, 7);
+        x >>= 1;
+        x |= bit7 << 7;
         parameters[0].set(operands, x);
-        cpu.flags = [x === 0, false, false, bit0];
+        X.CPU.flags = [x === 0, false, false, bit0];
       };
     },
     
-    'SRL': function(parameters) {// TODO bit 7 should not change??? (>>> ??)
-      return function(cpu, operands) {
+    'SRL': function(parameters) {
+      return function(operands) {
         var x = parameters[0].get(operands);
         var bit0 = Utils.nth_bit(x, 0);
-        x >> 1;
+        x >>= 1;
         parameters[0].set(operands, x);
-        cpu.flags = [x === 0, false, false, bit0];
+        X.CPU.flags = [x === 0, false, false, bit0];
       };
     },
     
     'STOP': function(parameters) {
-      return function(cpu, operands) {
+      return function(operands) {
         console.log('STOP');
       };
     },
     
     'SUB': function(parameters) {
-      return function(cpu, operands) {
-        cpu.A = cpu.A - parameters[0].get(operands);
-        cpu.flags = [cpu.A === 0, true, true, true]; // TODO H,C
+      return function(operands) {
+        var x = parameters[0].get(operands);
+        X.CPU.A = X.Utils.wrap8(X.CPU.A - x);
+        X.CPU.flags = [X.CPU.A === 0, true, X.CPU.A & 0xF < x & 0xF, X.CPU.A < x];
       };
     },
     
     'SWAP': function(parameters) {
-      return function(cpu, operands) {
+      return function(operands) {
         var x = parameters[0].get(operands);
         x = (x & 0xF0 >> 4) | (x & 0x0F << 4);
         parameters[0].set(operands, x);
-        cpu.flags = [x === 0, false, false, false];
+        X.CPU.flags = [x === 0, false, false, false];
       };
     },
     
     'XOR': function(parameters) {
-      return function(cpu, operands) {
-        cpu.A ^= parameters[0].get(operands);
-        cpu.flags = [cpu.A === 0, false, false, false];
+      return function(operands) {
+        X.CPU.A ^= parameters[0].get(operands);
+        X.CPU.flags = [X.CPU.A === 0, false, false, false];
       };
     }
     

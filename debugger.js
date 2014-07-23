@@ -6,6 +6,8 @@ X.Debugger = (function() {
 
   var registers = {};
 
+  var flags = {};
+
   var memory_window = [];
   var memory_window_start = 0;
 
@@ -15,7 +17,7 @@ X.Debugger = (function() {
 
     var buttons = document.querySelectorAll('section#buttons button');
     buttons[0].addEventListener('click', function() { X.GB.pause(); });
-    buttons[1].addEventListener('click', function() { X.GB.step(); });
+    buttons[1].addEventListener('click', function() { X.GB.step(true); });
     buttons[2].addEventListener('click', function() { X.GB.run(); });
   };
 
@@ -28,24 +30,33 @@ X.Debugger = (function() {
       var slot = cell.children[0];
       registers[name] = slot;
     });
-   
-    // Watch the registers to update their slot
+
+    update_registers();
+  };
+
+  var update_registers = function() {
+
     _.each(registers, function(slot, register) {
-      watch(X.CPU, register, function() {
-        slot.textContent = X.Utils.hex8(X.CPU[register]);
-      });
-      callWatchers(X.CPU, register);
+      slot.textContent = X.Utils.hex8(X.CPU[register]);
     });
   };
 
   var init_flags = function() {
 
+    // Cache the checkboxes representing flags
     var checkboxes = document.querySelectorAll('section#flags input');
     _.each(checkboxes, function(checkbox) {
+      flags[checkbox.name] = checkbox;
       checkbox.disabled = true;
-      watch(X.CPU, checkbox.name, function(prop, action, new_value) {
-        checkbox.checked = new_value;
-      });
+    });
+
+    update_flags();
+  };
+
+  var update_flags = function() {
+
+    _.each(flags, function(checkbox, flag) {
+      checkbox.checked = X.CPU[flag];
     });
   };
 
@@ -53,39 +64,29 @@ X.Debugger = (function() {
 
     // Cache cells containing a window on the memory
     var rows = document.querySelector('section#memory table').querySelectorAll('tr');
-    for (var r = 0; r < rows.length; ++r) {
-      var address = rows[r].children[0];
-      var value = rows[r].children[1];
-      memory_window[r] = [address, value];
-    }
+    _.each(rows, function(row) {
+      var address_cell = row.children[0];
+      var value_cell = row.children[1];
+      memory_window.push([address_cell, value_cell]);
+    });
     
     var input = document.querySelector('section#memory input');
     var button = document.querySelector('section#memory button');
-
     button.addEventListener('click', function() {
-
-      // Remove previous watchers
-      if (X.CPU.memory.watchers) {
-        unwatch(X.CPU.memory);
-      }
-
       memory_window_start = parseInt(input.value, 16);
-
-      // Update the memory window
-      for (var m = 0; m < memory_window.length; ++m) {
-        var address = memory_window_start + m;
-        memory_window[m][0].textContent = X.Utils.hex16(address);
-        memory_window[m][1].textContent = X.Utils.hex16(X.CPU.memory[address]);
-
-        // Watch the addresses visible in the window
-        watch(X.CPU.memory, address, function(prop, action, new_value) {
-          memory_window[prop - memory_window_start][1].textContent = X.Utils.hex16(X.CPU.memory[prop]);
-        });
-      }
-
+      update_memory();      
     });
 
-    button.click();
+    update_memory();
+  };
+
+  var update_memory = function() {
+
+    _.each(memory_window, function(m, index) {
+      var address = memory_window_start + index;
+      m[0].textContent = X.Utils.hex16(address);
+      m[1].textContent = X.Utils.hex16(X.Memory.r(address));
+    });
   };
 
   var init_breakpoints = function() {
@@ -137,15 +138,32 @@ X.Debugger = (function() {
       init_breakpoints();  
     },
 
+    update: function() {
+
+      update_registers();
+      update_flags();
+      update_memory();
+    },
+
+    logs: [],
     log: function() {
-      console.log(Array.prototype.slice.call(arguments).join('       '));
+
+      if (false)
+        console.log(Array.prototype.slice.call(arguments).join('       '));
+      else {
+        this.logs.push(Array.prototype.slice.call(arguments).join('       '));
+
+        if (this.logs.length > 10) {
+          this.logs = _.rest(this.logs);
+        }
+      }
     },
 
     log_instruction: function(opcode) {
 
       var address = X.CPU.PC;
       var bytes = parseInt(X.InstructionImplementations.opcodes[opcode][1]);
-      var instruction = X.CPU.memory.slice(address, address + bytes).map(function(x){ return x.toString(16) });
+      var instruction = X.Memory.r_(address, bytes).map(function(x){ return x.toString(16) });
       var instruction_name = X.InstructionImplementations.opcodes[opcode][0];
 
       this.log(address.toString(16), instruction, instruction_name);

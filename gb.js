@@ -10,19 +10,28 @@ X.GB = (function() {
 
       X.CPU.init();
       X.Debugger.init();
+
+      X.Cartridge.init(game);
+
+      //document.querySelector('input#rom').addEventListener('change', function() {});
     },
 
-    step: function() {
+    step: function(debug) {
 
       X.CPU.step();
+
+      if (debug)
+        X.Debugger.update();
     },
 
     run: function() {
 
       for (var i = 0; i < 50000; ++i) {
 
-        if (X.Debugger.reached_breakpoint())
+        if (X.Debugger.reached_breakpoint()) {
+          X.Debugger.update();
           return;
+        }
 
         X.GB.step();
       }
