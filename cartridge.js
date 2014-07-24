@@ -24,10 +24,12 @@ X.Cartridge = (function() {
   	},
 
   	r: function(address) {
+
   		return data[address];
   	},
 
   	w: function(address) {
+
   		return data[address];
   	}
 

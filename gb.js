@@ -9,6 +9,7 @@ X.GB = (function() {
     init: function() {
 
       X.CPU.init();
+      X.PPU.init();
       X.Debugger.init();
 
       X.Cartridge.init(game);
