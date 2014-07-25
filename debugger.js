@@ -97,6 +97,8 @@ X.Debugger = (function() {
     button.addEventListener('click', function() {
       toggle_breakpoint(parseInt(input.value, 16));
     });
+
+    toggle_breakpoint(0x70);
   };
 
   var toggle_breakpoint = function(address) {

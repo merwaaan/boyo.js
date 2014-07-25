@@ -12,12 +12,12 @@ X.Utils = (function() {
       *
       */
 
-  	nth_bit: function(value, n) {
+  	bit: function(value, n) {
   		return !!(value & 1 << n);
   	},
   	
     sign: function(value) {
-      return Utils.nth_bit(value, 7);
+      return Utils.bit(value, 7);
     },
     
   	is_negative: function(value) {
@@ -25,7 +25,7 @@ X.Utils = (function() {
   	},
     
     signed: function(value) {  
-      return this.nth_bit(value, 7) * -128 + (value & ~(1 << 7));
+      return this.bit(value, 7) * -128 + (value & ~(1 << 7));
     },
     
   	wrap8: function(value) {

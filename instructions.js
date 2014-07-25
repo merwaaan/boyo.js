@@ -171,7 +171,7 @@ X.InstructionImplementations = (function() {
     
     'BIT': function(parameters, parameter_names) {
       return function(operands) {
-        X.CPU.flags = [!X.Utils.nth_bit(parameters[1].get(), parameters[0].get()), false, true, undefined];
+        X.CPU.flags = [!X.Utils.bit(parameters[1].get(), parameters[0].get()), false, true, undefined];
       };
     },
     
@@ -358,7 +358,7 @@ X.InstructionImplementations = (function() {
     'RL': function(parameters, parameter_names) {
       return function(operands) {
         var x = parameters[0].get(operands);
-        var bit7 = X.Utils.nth_bit(x, 7);
+        var bit7 = X.Utils.bit(x, 7);
         x <<= 1;
         x = X.Utils.wrap8(x | X.CPU.carry);
         parameters[0].set(operands, x);
@@ -368,7 +368,7 @@ X.InstructionImplementations = (function() {
     
     'RLA': function(parameters, parameter_names) {
       return function(operands) {
-        var bit7 = X.Utils.nth_bit(X.CPU.A, 7);
+        var bit7 = X.Utils.bit(X.CPU.A, 7);
         X.CPU.A = X.Utils.wrap8(X.CPU.A << 1 | X.CPU.carry);
         X.CPU.flags = [X.CPU.A === 0, false, false, bit7];
       };
@@ -377,7 +377,7 @@ X.InstructionImplementations = (function() {
     'RLC': function(parameters, parameter_names) {
       return function(operands) {
         var x = parameters[0].get(operands);
-        var bit7 = X.Utils.nth_bit(x, 7);
+        var bit7 = X.Utils.bit(x, 7);
         x = X.Utils.wrap8(X.CPU.A << 1 | bit7);
         parameters[0].set(operands, x);
         X.CPU.flags = [x === 0, false, false, bit7];
@@ -386,7 +386,7 @@ X.InstructionImplementations = (function() {
     
     'RLCA': function(parameters, parameter_names) {
       return function(operands) {
-        var bit7 = X.Utils.nth_bit(X.CPU.A, 7);
+        var bit7 = X.Utils.bit(X.CPU.A, 7);
         X.CPU.A = X.Utils.wrap8(X.CPU.A << 1 | bit7);
         X.CPU.flags = [X.CPU.A === 0, false, false, bit7];
       };
@@ -395,7 +395,7 @@ X.InstructionImplementations = (function() {
     'RR': function(parameters, parameter_names) {
       return function(operands) {
         var x = parameters[0].get(operands);
-        var bit0 = X.Utils.nth_bit(x, 0);
+        var bit0 = X.Utils.bit(x, 0);
         x >>= 1;
         x |= X.CPU.carry << 7;
         parameters[0].set(operands, x);
@@ -405,7 +405,7 @@ X.InstructionImplementations = (function() {
     
     'RRA': function(parameters, parameter_names) {
       return function(operands) {
-        var bit0 = X.Utils.nth_bit(X.CPU.A, 0);
+        var bit0 = X.Utils.bit(X.CPU.A, 0);
         X.CPU.A >>= 1;
         X.CPU.A |= X.CPU.carry << 7;
         X.CPU.flags = [X.CPU.A === 0, false, false, bit0];
@@ -415,7 +415,7 @@ X.InstructionImplementations = (function() {
     'RRC': function(parameters, parameter_names) {
       return function(operands) {
         var x = parameters[0].get(operands);
-        var bit0 = X.Utils.nth_bit(x, 0);
+        var bit0 = X.Utils.bit(x, 0);
         x >>= 1;
         x |= bit0 << 7;
         parameters[0].set(operands, x);
@@ -425,7 +425,7 @@ X.InstructionImplementations = (function() {
     
     'RRCA': function(parameters, parameter_names) {
       return function(operands) {
-        var bit0 = X.Utils.nth_bit(X.CPU.A, 0);
+        var bit0 = X.Utils.bit(X.CPU.A, 0);
         X.CPU.A >>= 1;
         X.CPU.A |= bit0 << 7;
         X.CPU.flags = [X.CPU.A === 0, false, false, bit0];
@@ -463,7 +463,7 @@ X.InstructionImplementations = (function() {
     'SLA': function(parameters, parameter_names) {
       return function(operands) {
         var x = parameters[0].get(operands);
-        var bit7 = Utils.nth_bit(x, 7);
+        var bit7 = Utils.bit(x, 7);
         x = X.Utils.wrap8(x << 1);
         parameters[0].set(operands, x);
         X.CPU.flags = [x === 0, false, false, bit7];
@@ -473,8 +473,8 @@ X.InstructionImplementations = (function() {
     'SRA': function(parameters, parameter_names) {
       return function(operands) {
         var x = parameters[0].get(operands);
-        var bit0 = Utils.nth_bit(x, 0);
-        var bit7 = Utils.nth_bit(x, 7);
+        var bit0 = Utils.bit(x, 0);
+        var bit7 = Utils.bit(x, 7);
         x >>= 1;
         x |= bit7 << 7;
         parameters[0].set(operands, x);
@@ -485,7 +485,7 @@ X.InstructionImplementations = (function() {
     'SRL': function(parameters, parameter_names) {
       return function(operands) {
         var x = parameters[0].get(operands);
-        var bit0 = Utils.nth_bit(x, 0);
+        var bit0 = Utils.bit(x, 0);
         x >>= 1;
         parameters[0].set(operands, x);
         X.CPU.flags = [x === 0, false, false, bit0];

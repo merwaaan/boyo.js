@@ -41,7 +41,11 @@ X.CPU = (function() {
 
     interrupt_master_enable: true,
     get interrupt_enable() { return X.Memory.r(0xFFFF); },
-    get interrupt_flag() { return X.Memory.r(0xFFFE); },
+    get interrupt_flag() { return X.Memory.r(0xFF0F); },
+
+    request_interrupt: function() {
+      // TODO?
+    },
 
     handle_interrupts: function() {
       console.log('interrupt!');

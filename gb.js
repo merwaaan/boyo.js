@@ -27,7 +27,7 @@ X.GB = (function() {
 
     run: function() {
 
-      for (var i = 0; i < 50000; ++i) {
+      for (var i = 0; i < 500000; ++i) {
 
         if (X.Debugger.reached_breakpoint()) {
           X.Debugger.update();
@@ -35,6 +35,7 @@ X.GB = (function() {
         }
 
         X.GB.step();
+        if (i==499999) console.log('loop limit');
       }
     }
 

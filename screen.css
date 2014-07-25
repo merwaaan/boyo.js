@@ -36,3 +36,9 @@ section#registers td span {
 
 	margin-left: 1em;
 }
+
+canvas {
+	float: right;
+	width: 400px;
+	border: 1px solid green;
+}
