@@ -2,6 +2,10 @@
 	margin: 0;
 }
 
+body {
+	font-family: monospace;
+}
+
 table {
   border: 1px solid black;
   border-collapse: collapse;
@@ -39,6 +43,5 @@ section#registers td span {
 
 canvas {
 	float: right;
-	width: 400px;
 	border: 1px solid green;
 }

@@ -5,8 +5,7 @@ X.Memory = (function() {
 	'use strict';
 
 	var data = new Array(0x10000);
-  for (var i = 0; i < 0x10000; ++i)
-    data[i] = 0;
+  X.Utils.fill(data);
 
   // Copy bios to memory
   /*for (var i = 0; i < 0x100; ++i)
@@ -19,8 +18,8 @@ X.Memory = (function() {
 
     r: function(address) {
 
-    	// ROM bank 0
-    	if (address < 0x4000) {
+    	// ROM
+    	if (address < 0x8000) {
 
     		if (!bootstraped && address < 0x100)
     			return bootstrap[address];
@@ -47,6 +46,11 @@ X.Memory = (function() {
 
     w: function(address, value) {
       return data[address] = value;
+    },
+
+    watch: function(address, handler) {
+
+      data.watch(address, handler);
     }
 
 	};

@@ -66,10 +66,48 @@ X.PPU = (function(globals) {
       number: 0
     },
 
+    cached_tiles: [],
+
     init: function() {
 
       canvas = document.querySelector('section#game canvas');
       canvas_ctx = canvas.getContext('2d');
+
+      //
+
+      for (var t = 0; t < 256; ++t) { // For each tile...
+
+        var tile = new Array(64);
+        X.Utils.fill(tile);
+        this.cached_tiles.push(tile);
+
+        for (var r = 0; r < 16; ++r) { // For each row...
+
+          X.Memory.watch(0x8000 + t*16 + r, function(ppu, t, r) {
+            return function(prop, old_val, new_val) {
+
+              if (prop % 2 == 0) {
+                var l1 = new_val;
+                var l2 = X.Memory.r(prop + 1);
+              }
+              else {
+                var l1 = X.Memory.r(prop - 1);
+                var l2 = new_val;
+              }
+
+              for (var p = 0; p < 8; ++p) {
+                var a = X.Utils.bit(l1, p);
+                var b = X.Utils.bit(l2, p);
+                var c = a | b << 1;
+              
+                ppu.cached_tiles[t][Math.floor(r/2)*8 + (7-p)] = c;
+              }
+            }
+          }(this, t, r));
+        }
+      }
+
+      //
 
       setInterval(this.draw_frame.bind(this), 1000);
     },
@@ -78,27 +116,20 @@ X.PPU = (function(globals) {
 
     	canvas_ctx.clearRect(0, 0, 256, 256);
 
-      for (var y = 0; y < 32; ++y) {
-        for (var x = 0; x < 32; ++x) {
+      var x0 = Math.floor(this.scroll_x / 32);
+      var y0 = Math.floor(this.scroll_y / 32);
 
-          var tile = X.Memory.r(this.bg_tile_map + y*32 + x);
-          var pixels = X.Memory.r_(this.bg_window_tile_data + tile * 16, 16);
+      for (var dy = 0; dy < 18; ++dy)
+        for (var dx = 0; dx < 20; ++dx) {
 
-          for (var py = 0; py < 16; py += 2 ) {
-            for (var px = 0; px < 8; ++px) {
+          var tx = x0 + dx;
+          var ty = y0 + dy;
+          var tile_number = X.Memory.r(this.bg_tile_map + ty*32 + tx);
 
-              var a = X.Utils.bit(pixels[py], px);
-              var b = X.Utils.bit(pixels[py+1], px);
-              var c = a | b << 1;
-
-              canvas_ctx.fillStyle = this.color(c, 'bg_palette');
-              canvas_ctx.fillRect(x*8 + (8-px), y*8 + py/2, 1, 1);
-            }
-          }
+          var tile = canvas_ctx.createImageData(8, 8);
+          X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
+          canvas_ctx.putImageData(tile, dx*8, dy*8);
         }
-      }
-
-      canvas_ctx.strokeRect(this.scroll_x, this.scroll_y, 160, 144);
 
       this.line_y = 0x90;
       vblank();

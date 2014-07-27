@@ -12,7 +12,7 @@
 	<script src="debugger.js"></script> 
   
   <script src="libs/underscore.js"></script>  
-  <script src="libs/watch.js"></script>
+  <!--<script src="libs/watch.js"></script>-->
   
   <link rel="stylesheet" type="text/css" href="screen.css"/>
 </head>
@@ -23,7 +23,7 @@
   </header>
 
   <section id="game">
-    <canvas width="256" height="256"/>
+    <canvas width="160" height="144"/>
   </section>
     
   <!--<input type="file" id="rom"/>-->
@@ -58,16 +58,6 @@
       <input type="text" name="address" value="0"/>
       <button name="go_to_address">Go to address</button>
       <table>
-        <tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr>
-        <tr><td></td><td></td></tr>
       </table>
     </section>
 
@@ -78,8 +68,22 @@
       </ul>
     </section>
 
+    <canvas width="128" height="128" id="tiles"></canvas>
+    <!--<canvas id="oam"></canvas>-->
+    <canvas width="256" height="256"id="background"></canvas>
+
     <div id="log"></div>
 
+  </section>
+
+  <section id="about">
+  </section>
+
+  <section id="changelog">
+    <p>0.1</p>
+    <ul>
+      <li></li>
+    </ul>
   </section>
 
   <footer>

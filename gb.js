@@ -14,6 +14,7 @@ X.GB = (function() {
 
       X.Cartridge.init(game);
 
+      //setInterval(function() {for(var i=0; i < 100;++i)this.step(true);}.bind(this), 1);
       //document.querySelector('input#rom').addEventListener('change', function() {});
     },
 

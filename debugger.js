@@ -10,8 +10,13 @@ X.Debugger = (function() {
 
   var memory_window = [];
   var memory_window_start = 0;
+  var memory_window_rows = 5;
+  var memory_window_headers = [];
 
   var breakpoints = [];
+
+  var tiles_canvas;
+  var background_canvas;
 
   var init_buttons = function() {
 
@@ -62,18 +67,25 @@ X.Debugger = (function() {
 
   var init_memory = function() {
 
-    // Cache cells containing a window on the memory
-    var rows = document.querySelector('section#memory table').querySelectorAll('tr');
-    _.each(rows, function(row) {
-      var address_cell = row.children[0];
-      var value_cell = row.children[1];
-      memory_window.push([address_cell, value_cell]);
-    });
-    
+    // Fill the table and cache cells
+    var table = document.querySelector('section#memory table');
+    for (var r = 0; r < memory_window_rows; ++r) {
+      
+      var row = table.insertRow();
+      for (var c = 0; c < 17; ++c) {
+
+        var cell = row.insertCell();
+        if (c == 0)
+          memory_window_headers.push(cell);
+        else
+          memory_window.push(cell);
+      } 
+    }
+
     var input = document.querySelector('section#memory input');
     var button = document.querySelector('section#memory button');
     button.addEventListener('click', function() {
-      memory_window_start = parseInt(input.value, 16);
+      memory_window_start = Math.floor(parseInt(input.value, 16) / 16) * 16;
       update_memory();      
     });
 
@@ -82,10 +94,13 @@ X.Debugger = (function() {
 
   var update_memory = function() {
 
+    _.each(memory_window_headers, function(h, index) {
+      h.textContent = X.Utils.hex16(memory_window_start + index * 16);
+    });
+      
     _.each(memory_window, function(m, index) {
       var address = memory_window_start + index;
-      m[0].textContent = X.Utils.hex16(address);
-      m[1].textContent = X.Utils.hex16(X.Memory.r(address));
+      m.textContent = X.Utils.hex16(X.Memory.r(address));
     });
   };
 
@@ -98,7 +113,7 @@ X.Debugger = (function() {
       toggle_breakpoint(parseInt(input.value, 16));
     });
 
-    toggle_breakpoint(0x70);
+    toggle_breakpoint(0x100);
   };
 
   var toggle_breakpoint = function(address) {
@@ -125,8 +140,46 @@ X.Debugger = (function() {
       breakpoints.splice(index, 1);
 
       var item = _.find(list.children, function(child) { return parseInt(child.textContent, 16) === address });
-      console.log(item);list.removeChild(item);
+      list.removeChild(item);
     }
+  };
+
+  var init_tiles = function() {
+
+    tiles_canvas = document.querySelector('section#debugger canvas#tiles').getContext('2d');
+  };
+
+  var update_tiles = function() {
+
+    for (var y = 0; y < 16; ++y) {
+      for (var x = 0; x < 16; ++x) {
+
+        var tile = tiles_canvas.createImageData(8, 8);
+        X.Utils.cache_to_image(X.PPU.cached_tiles[y*16 + x], tile.data);
+        tiles_canvas.putImageData(tile, x*8, y*8);
+      }
+    }
+  };
+
+  var init_background = function() {
+
+    background_canvas = document.querySelector('section#debugger canvas#background').getContext('2d');
+  };
+
+  var update_background = function() {
+
+    for (var y = 0; y < 32; ++y)
+      for (var x = 0; x < 32; ++x) {
+
+        var tile_number = X.Memory.r(X.PPU.bg_tile_map + y*32 + x);
+
+        var tile = background_canvas.createImageData(8, 8);
+        X.Utils.cache_to_image(X.PPU.cached_tiles[tile_number], tile.data);
+        background_canvas.putImageData(tile, x*8, y*8);
+      }
+
+    background_canvas.strokeStyle = 'rgb(255,0,0)';
+    background_canvas.strokeRect(X.PPU.scroll_x, X.PPU.scroll_y, 160, 144);
   };
 
   return {
@@ -137,7 +190,9 @@ X.Debugger = (function() {
       init_registers();
       init_flags();
       init_memory();
-      init_breakpoints();  
+      init_breakpoints();
+      init_tiles();
+      init_background();
     },
 
     update: function() {
@@ -145,12 +200,14 @@ X.Debugger = (function() {
       update_registers();
       update_flags();
       update_memory();
+      update_tiles();
+      update_background();
     },
 
     logs: [],
     log: function() {
 
-      if (false)
+      if (false)// && X.CPU.PC > 0x100)
         console.log(Array.prototype.slice.call(arguments).join('       '));
       else {
         this.logs.push(Array.prototype.slice.call(arguments).join('       '));
