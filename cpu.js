@@ -27,13 +27,6 @@ X.CPU = (function() {
     get halfcarry() { return this.get_flag(1 << 5); }, set halfcarry(x) { this.set_flag(1 << 5, x); },
     get addsub() { return this.get_flag(1 << 6); }, set addsub(x) { this.set_flag(1 << 6, x); },
     get zero() { return this.get_flag(1 << 7); }, set zero(x) { this.set_flag(1 << 7, x); },
-
-    flag_names: ['zero', 'addsub', 'halfcarry', 'carry'],
-    
-    set flags(flags) {
-      for (var i in this.flag_names)
-        if (flags[i] !== undefined) this[this.flag_names[i]] = flags[i]
-    },
     
     /**
       * Interrupts
@@ -74,23 +67,23 @@ X.CPU = (function() {
       //
       this.instructions = X.InstructionImplementations.generate();
     },
-
-    step: function() {
+last:0,
+    step_one: function() {
       
       // Fetch
-
+this.last = this.PC;
       var opcode = X.Memory.r(this.PC);
       opcode = opcode == 0xCB ? 0x100 + X.Memory.r(this.PC + 1) : opcode;  
 
       var instruction = this.instructions[opcode];
-      var bytes = parseInt(X.InstructionImplementations.opcodes[opcode][1]); // later -> just store length and cycles as numbers
+      var bytes = parseInt(X.InstructionImplementations.opcodes[opcode][1]); // TODO just store length and cycles as numbers
       var cycles = parseInt(X.InstructionImplementations.opcodes[opcode][2]);
 
       var operands = X.Memory.r_(this.PC + 1, bytes);
 
       // Execute
       
-      X.Debugger.log_instruction(opcode);
+      //X.Debugger.log_instruction(opcode);
 
       this.PC += bytes;
       instruction(operands);
@@ -100,9 +93,10 @@ X.CPU = (function() {
       if (this.interrupt_master_enable && this.interrupt_requested & this.interrupt_enabled > 0) {
         this.handle_interrupts();
       }
-      
+
       return cycles;
-    }
+    },
+
   };
 
 })();

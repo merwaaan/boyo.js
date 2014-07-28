@@ -10,17 +10,39 @@ X.GB = (function() {
 
       X.CPU.init();
       X.PPU.init();
+      X.Joypad.init();
       X.Debugger.init();
 
       X.Cartridge.init(game);
 
-      //setInterval(function() {for(var i=0; i < 100;++i)this.step(true);}.bind(this), 1);
       //document.querySelector('input#rom').addEventListener('change', function() {});
     },
 
+    /*step: function(steps, pause) {
+
+      for (var i = 0; i < pause; ++i) {
+
+        X.PPU.step(X.CPU.step_one());
+
+        if (X.Debugger.reached_breakpoint()) {
+          X.Debugger.update();
+          console.log('breakpoint');
+          return;  
+        }
+      } 
+
+      if (steps - pause > 0) {
+        setTimeout(function() { this.step(steps - pause, pause); }.bind(this), 0);
+      }
+      else {
+        X.Debugger.update();
+        console.log('end');
+      }
+    },*/
+
     step: function(debug) {
 
-      X.CPU.step();
+      X.PPU.step(X.CPU.step_one());
 
       if (debug)
         X.Debugger.update();
@@ -28,16 +50,19 @@ X.GB = (function() {
 
     run: function() {
 
-      for (var i = 0; i < 500000; ++i) {
+      for (var i = 0; i < 10000000; ++i) {
+
+        this.step();
 
         if (X.Debugger.reached_breakpoint()) {
           X.Debugger.update();
-          return;
+          console.log('breakpoint');
+          return;  
         }
-
-        X.GB.step();
-        if (i==499999) console.log('loop limit');
       }
+
+      X.Debugger.update();
+      console.log('end'); 
     }
 
   };

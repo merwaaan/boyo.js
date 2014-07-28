@@ -36,12 +36,21 @@ section#registers td {
 	padding: 0.3em;
 }
 
-section#registers td span {
+section#registers td {
 
 	margin-left: 1em;
+	text-align: right;
+}
+
+section#registers td:first-child, section#memory td:first-child {
+	font-weight: bold;
 }
 
 canvas {
 	float: right;
 	border: 1px solid green;
+}
+
+section#debugger section {
+
 }

@@ -68,6 +68,10 @@ for t, table in enumerate(soup.find_all('table')[:2]):
       # Fix LD (C),A and LD (A),C typos
       if opcode == 0xE2 or opcode == 0xF2:
         bytes = 1
+        
+      # Fix LD (HL) -> LD HL
+      if opcode == 0xE9:
+        instruction = 'JP HL'
 
       # Switch to less ambiguous mnemonics for conditional flag statuses
       if opcode in flag_dependent:

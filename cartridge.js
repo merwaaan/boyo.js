@@ -6,7 +6,6 @@ X.Cartridge = (function() {
 
 	var data = [];
 
-  var mbc;
   var MemoryBankControllers = {
     
     0x0: { // None
@@ -21,15 +20,16 @@ X.Cartridge = (function() {
     0x1: { // MBC1
       bank: 1,
       r: function(address) {
-        return address < 0x4000 ? data[address] : data[bank*0x4000 + address - 0x4000];
+        return address < 0x4000 ? data[address] : data[this.bank*0x4000 + address - 0x4000];
       },
       w: function(address, value) {
         if (address >= 0x2000 && address < 0x4000) {
-          bank = (bank & 0xE0) | (value & 0x1F);
+          this.bank = (this.bank & 0x60) | (value & 0x1F);
         }
         else if (address >= 0x4000 && address < 0x6000) {
-          bank = (bank & 0x1F) | (value & 0x3) << 5;
+          this.bank = (this.bank & 0x1F) | (value & 0x3) << 5;
         }
+        console.log('switched to bank ',this.bank);
       }
     },
   };
@@ -46,21 +46,23 @@ X.Cartridge = (function() {
 		get rom_size() { return data[0x148]; },
 		get ram_size() { return data[0x149]; },
 
+    mbc: null,
+
   	init: function(bytes) {
 
   		data = bytes;
 
-      mbc = MemoryBankControllers[this.type];
+      this.mbc = MemoryBankControllers[this.type];
   	},
 
   	r: function(address) {
 
-  		return mbc.r(address);
+  		return this.mbc.r(address);
   	},
 
   	w: function(address, value) {
 
-  		return mbc.w(address, value);
+  		return this.mbc.w(address, value);
   	}
 
   };

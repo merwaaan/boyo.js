@@ -1,6 +1,6 @@
 var X = X || {};
 
-X.PPU = (function(globals) {
+X.PPU = (function() {
 
   'use strict';
 
@@ -35,6 +35,12 @@ X.PPU = (function(globals) {
     // STAT
 
     get STAT() { return X.Memory.r(0xFF41); },
+    get line_y_coincidence_interrupt() { return X.Utils.bit(this.STAT, 6); },
+    get oam_interrupt() { return X.Utils.bit(this.STAT, 5); },
+    get vblank_interrupt() { return X.Utils.bit(this.STAT, 4); },
+    get hblank_interrupt() { return X.Utils.bit(this.STAT, 3); },
+    get line_y_coincidence_flag() { return true; }, // TODO
+    get mode() { return this.STAT & 0x3; }, set mode(x) { X.Memory.w(0xFF41, this.STAT & 0x7C | x); },
 
     // Position and scrolling
 
@@ -75,7 +81,7 @@ X.PPU = (function(globals) {
 
       //
 
-      for (var t = 0; t < 256; ++t) { // For each tile...
+      for (var t = 0; t < 384; ++t) { // For each tile...
 
         var tile = new Array(64);
         X.Utils.fill(tile);
@@ -109,7 +115,7 @@ X.PPU = (function(globals) {
 
       //
 
-      setInterval(this.draw_frame.bind(this), 1000);
+      this.mode = 2;
     },
 
     draw_frame: function() {
@@ -134,7 +140,58 @@ X.PPU = (function(globals) {
       this.line_y = 0x90;
       vblank();
     },
+
+    mode_cycles: 2,
+    mode_durations: [204, 4560, 80, 172],
+
+    change_mode: function(m) {
+
+      this.mode_cycles -= this.mode_durations[this.mode];
+      this.mode = m;
+    },
+
+    step: function(cycles) {
+
+      this.mode_cycles += cycles;
+
+      switch (this.mode) {
+
+        case 0: // H-Blank
+          if (this.mode_cycles > this.mode_durations[0]) {
+          	if (this.line_y >= 144) {
+	            this.change_mode(1);
+	            this.draw_frame();
+	            console.log('vblank');
+	          }
+          	else {
+	            this.change_mode(2);
+	            ++this.line_y;  
+	          }
+	        }
+          break;
+
+        case 1: // V-Blank
+          this.line_y = 145 + Math.floor(this.mode_cycles/456);
+          if (this.mode_cycles > this.mode_durations[1]) {
+            this.change_mode(2);  
+            this.line_y = 0;
+          }
+          break;
+
+        case 2: // OAM access
+          if (this.mode_cycles > this.mode_durations[2]) {
+            this.change_mode(3);  
+          }
+          break;
+
+        case 3: // OAM + VRAM access
+          if (this.mode_cycles > this.mode_durations[3]) {
+            this.change_mode(0);
+          }
+          break;
+      }
+    }
   	
   };
   
-})(X || {});
+})();

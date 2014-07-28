@@ -28,9 +28,11 @@ X.Memory = (function() {
 
 				return X.Cartridge.r(address);
     	}
+      else if (address == 0xFF00) {
+        return X.Joypad.r();
+      }
 
-    	else    	
-      	return data[address];
+    	return data[address];
     },
 
     r_: function(address, length) {
@@ -45,6 +47,15 @@ X.Memory = (function() {
     },
 
     w: function(address, value) {
+
+      // ROM
+      if (address < 0x8000) {
+        return X.Cartridge.w(address, value);
+      }
+      else if (address == 0xFF00) {
+        return X.Joypad.w(value);
+      }
+
       return data[address] = value;
     },
 

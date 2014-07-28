@@ -29,10 +29,10 @@ X.Debugger = (function() {
   var init_registers = function() {
 
     // Cache the slots containing the CPU registers states
-    var cells = document.querySelectorAll('section#registers td');
-    _.each(cells, function(cell) {
-      var name = cell.textContent;
-      var slot = cell.children[0];
+    var rows = document.querySelectorAll('section#registers tr');
+    _.each(rows, function(row) {
+      var name = row.children[0].textContent;
+      var slot = row.children[1];
       registers[name] = slot;
     });
 
@@ -42,7 +42,7 @@ X.Debugger = (function() {
   var update_registers = function() {
 
     _.each(registers, function(slot, register) {
-      slot.textContent = X.Utils.hex8(X.CPU[register]);
+      slot.textContent = X.Utils.hex16(X.CPU[register]);
     });
   };
 
@@ -100,7 +100,7 @@ X.Debugger = (function() {
       
     _.each(memory_window, function(m, index) {
       var address = memory_window_start + index;
-      m.textContent = X.Utils.hex16(X.Memory.r(address));
+      m.textContent = X.Utils.hex8(X.Memory.r(address));
     });
   };
 
@@ -113,7 +113,7 @@ X.Debugger = (function() {
       toggle_breakpoint(parseInt(input.value, 16));
     });
 
-    toggle_breakpoint(0x100);
+    toggle_breakpoint(0x34D);
   };
 
   var toggle_breakpoint = function(address) {
@@ -147,11 +147,12 @@ X.Debugger = (function() {
   var init_tiles = function() {
 
     tiles_canvas = document.querySelector('section#debugger canvas#tiles').getContext('2d');
+    update_tiles();
   };
 
   var update_tiles = function() {
 
-    for (var y = 0; y < 16; ++y) {
+    for (var y = 0; y < 24; ++y) {
       for (var x = 0; x < 16; ++x) {
 
         var tile = tiles_canvas.createImageData(8, 8);
@@ -164,6 +165,7 @@ X.Debugger = (function() {
   var init_background = function() {
 
     background_canvas = document.querySelector('section#debugger canvas#background').getContext('2d');
+    update_background();
   };
 
   var update_background = function() {
@@ -220,6 +222,8 @@ X.Debugger = (function() {
 
     log_instruction: function(opcode) {
 
+      this.log(X.CPU.PC.toString(16));
+      return;
       var address = X.CPU.PC;
       var bytes = parseInt(X.InstructionImplementations.opcodes[opcode][1]);
       var instruction = X.Memory.r_(address, bytes).map(function(x){ return x.toString(16) });

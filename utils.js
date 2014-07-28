@@ -90,11 +90,11 @@ X.Utils = (function() {
     },
 
     hex8: function(value) {
-      return '0x' + value.toString(16).toUpperCase();
+      return ('0' + value.toString(16).toUpperCase()).substr(-2);
     },
 
     hex16: function(value) {
-      return '0x' + value.toString(16).toUpperCase();
+      return ('000' + value.toString(16).toUpperCase()).substr(-4);
     }
 
   };
