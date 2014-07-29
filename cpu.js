@@ -4,8 +4,6 @@ X.CPU = (function() {
 
   'use strict';
 
-  var interrupts = [];
-
   return {
 
     /**
@@ -34,14 +32,28 @@ X.CPU = (function() {
 
     interrupt_master_enable: true,
     get interrupt_enable() { return X.Memory.r(0xFFFF); },
-    get interrupt_flag() { return X.Memory.r(0xFF0F); },
+    get interrupt_request() { return X.Memory.r(0xFF0F); }, set interrupt_request(x) { X.Memory.w(0xFF0F, x); },
 
-    request_interrupt: function() {
-      // TODO?
+    request_interrupt: function(bit) {
+      this.interrupt_request |= 1 << bit;
     },
 
-    handle_interrupts: function() {
-      console.log('interrupt!');
+    check_interrupts: function() {
+
+      if (this.interrupt_master_enable && this.interrupt_request & this.interrupt_enable > 0)
+        for (var b = 0; b < 5; ++b)
+          if (X.Utils.bit(this.interrupt_request, b) && X.Utils.bit(this.interrupt_enable, b))
+            this.do_interrupt(b);
+    },
+
+    do_interrupt: function(bit) {
+
+      // Disable interrupts
+      this.interrupt_master_enable = false;
+      this.interrupt_request &= ~(1 << bit);
+
+      // Jump to the appropriate address
+      this.call(0x40 + 8*bit);
     },
 
     /**
@@ -62,16 +74,32 @@ X.CPU = (function() {
       return X.Memory.r(this.SP++); // Wrap stack???
     },
 
+    jump: function(address) {
+      this.PC = address;
+    },
+
+    call: function(address) {
+      this.push(X.Utils.hi(X.CPU.PC));
+      this.push(X.Utils.lo(X.CPU.PC));
+      this.jump(address);
+    },
+
+    ret: function() {
+      var lo = X.CPU.pop();
+      var hi = X.CPU.pop();
+      this.jump(X.Utils.hilo(hi, lo));
+    },
+
     init: function() {
 
       //
       this.instructions = X.InstructionImplementations.generate();
     },
-last:0,
-    step_one: function() {
+
+    step: function() {
       
       // Fetch
-this.last = this.PC;
+
       var opcode = X.Memory.r(this.PC);
       opcode = opcode == 0xCB ? 0x100 + X.Memory.r(this.PC + 1) : opcode;  
 
@@ -85,14 +113,12 @@ this.last = this.PC;
       
       //X.Debugger.log_instruction(opcode);
 
-      this.PC += bytes;
+      this.PC = X.Utils.wrap16(this.PC + bytes);
       instruction(operands);
 
       // Check for interrupts
       
-      if (this.interrupt_master_enable && this.interrupt_requested & this.interrupt_enabled > 0) {
-        this.handle_interrupts();
-      }
+      this.check_interrupts();
 
       return cycles;
     },

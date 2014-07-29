@@ -55,7 +55,9 @@ X.Memory = (function() {
       else if (address == 0xFF00) {
         return X.Joypad.w(value);
       }
-
+      else if (address == 0xFF01) {
+        //console.log(String.fromCharCode(value)); // Blaarg's tests
+      }
       return data[address] = value;
     },
 

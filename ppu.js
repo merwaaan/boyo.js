@@ -8,14 +8,15 @@ X.PPU = (function() {
   var canvas_ctx;
 
   var colors = [
-    'white',
-    'lightgray',
-    'gray',
-    'black'
+    [0xFF, 0xFF, 0xFF],
+   	[0xAA, 0xAA, 0xAA],
+    [0x66, 0x66, 0x66],
+    [0x00, 0x00, 0x00]
   ];
 
   var vblank = function() {
-  	X.Memory.w(0xFF0F, X.Memory.r(0xFF0F) & 1);
+  	X.CPU.request_interrupt(0);
+  	return true;
   };
 
   return {
@@ -57,13 +58,9 @@ X.PPU = (function() {
     get obj_palette_0() { return X.Memory.r(0xFF48); },
     get obj_palette_1() { return X.Memory.r(0xFF49); },
   	
-    color: function(index, palette) {
-    	var c = X.Utils.bit(this[palette], index*2) | X.Utils.bit(this[palette], index*2+1) << 1;
-      if (c == 0) return 'rgb(255,255,255)';
-      if (c == 1) return 'rgb(150,150,150)';
-      if (c == 2) return 'rgb(75,75,75)';
-      if (c == 3) return 'rgb(0,0,0)';
-    },
+  	cached_bg_palette: [0, 1, 2, 3],
+  	cached_obj_palette_0: [0, 1, 2, 3],
+  	cached_obj_palette_1: [0, 1, 2, 3],
 
     // DMA transfer
 
@@ -79,7 +76,7 @@ X.PPU = (function() {
       canvas = document.querySelector('section#game canvas');
       canvas_ctx = canvas.getContext('2d');
 
-      //
+      // Maintain cached tiles for faster access
 
       for (var t = 0; t < 384; ++t) { // For each tile...
 
@@ -113,6 +110,17 @@ X.PPU = (function() {
         }
       }
 
+      // Maintain cached palettes for faster access
+
+      var palettes = [this.cached_bg_palette, this.cached_obj_palette_0, this.cached_obj_palette_1];
+      
+      _.each(palettes, function(palette, index) {
+      	X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
+	      	for (var b = 0; b < 4; ++b)
+						palette[b] = colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
+    		}.bind(this));
+      }); 
+
       //
 
       this.mode = 2;
@@ -120,7 +128,7 @@ X.PPU = (function() {
 
     draw_frame: function() {
 
-    	canvas_ctx.clearRect(0, 0, 256, 256);
+    	canvas_ctx.clearRect(0, 0, 160, 144);
 
       var x0 = Math.floor(this.scroll_x / 32);
       var y0 = Math.floor(this.scroll_y / 32);
@@ -130,15 +138,16 @@ X.PPU = (function() {
 
           var tx = x0 + dx;
           var ty = y0 + dy;
+          
           var tile_number = X.Memory.r(this.bg_tile_map + ty*32 + tx);
-
+          tile_number = this.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
+          
           var tile = canvas_ctx.createImageData(8, 8);
           X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
           canvas_ctx.putImageData(tile, dx*8, dy*8);
         }
 
       this.line_y = 0x90;
-      vblank();
     },
 
     mode_cycles: 2,
@@ -160,8 +169,8 @@ X.PPU = (function() {
           if (this.mode_cycles > this.mode_durations[0]) {
           	if (this.line_y >= 144) {
 	            this.change_mode(1);
-	            this.draw_frame();
-	            console.log('vblank');
+	            //this.draw_frame();
+      				return vblank();
 	          }
           	else {
 	            this.change_mode(2);

@@ -3,7 +3,9 @@ var X = X ||{};
 X.GB = (function() {
 
   'use strict';
-  
+
+  var paused = false;
+
   return {
   
     init: function() {
@@ -40,29 +42,45 @@ X.GB = (function() {
       }
     },*/
 
-    step: function(debug) {
+    frame: function() {
 
-      X.PPU.step(X.CPU.step_one());
-
-      if (debug)
+      // Emulate until a V-Blank occurs
+      while (!X.PPU.step(X.CPU.step())) {}
+      
+      // Draw the frame on the canvas
+      X.PPU.draw_frame();
+      
+      // Repeat...
+      if (!paused)
+        setTimeout(this.frame.bind(this), 0);
+      else {
         X.Debugger.update();
+        paused = false;
+      }
+    },
+
+    pause: function() {
+
+      paused = true;
+    },
+
+    step: function() {
+
+      X.PPU.step(X.CPU.step());
+      X.Debugger.update();
     },
 
     run: function() {
 
-      for (var i = 0; i < 10000000; ++i) {
+      setTimeout(this.frame.bind(this), 0);
 
-        this.step();
-
+      /*
         if (X.Debugger.reached_breakpoint()) {
           X.Debugger.update();
           console.log('breakpoint');
           return;  
         }
-      }
-
-      X.Debugger.update();
-      console.log('end'); 
+         */
     }
 
   };

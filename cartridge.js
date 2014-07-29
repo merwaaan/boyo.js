@@ -29,7 +29,7 @@ X.Cartridge = (function() {
         else if (address >= 0x4000 && address < 0x6000) {
           this.bank = (this.bank & 0x1F) | (value & 0x3) << 5;
         }
-        console.log('switched to bank ',this.bank);
+        //console.log('switched to bank ',this.bank);
       }
     },
   };

@@ -66,7 +66,7 @@ X.Utils = (function() {
 
       for (var y = 0; y < 8; ++y)
         for (var x = 0; x < 8; ++x) {
-          var color = X.PPU.color(cache[y*8 + x], 'bg_palette').slice(4,15).split(',');
+          var color = X.PPU.cached_bg_palette[cache[y*8 + x]];
           var index = y*8*4 + x*4;
           image[index] = color[0];
           image[index + 1] = color[1];

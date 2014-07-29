@@ -22,7 +22,7 @@ X.Debugger = (function() {
 
     var buttons = document.querySelectorAll('section#buttons button');
     buttons[0].addEventListener('click', function() { X.GB.pause(); });
-    buttons[1].addEventListener('click', function() { X.GB.step(true); });
+    buttons[1].addEventListener('click', function() { X.GB.step(); });
     buttons[2].addEventListener('click', function() { X.GB.run(); });
   };
 
@@ -113,7 +113,7 @@ X.Debugger = (function() {
       toggle_breakpoint(parseInt(input.value, 16));
     });
 
-    toggle_breakpoint(0x34D);
+    toggle_breakpoint(0x3EE);
   };
 
   var toggle_breakpoint = function(address) {
@@ -168,13 +168,15 @@ X.Debugger = (function() {
     update_background();
   };
 
-  var update_background = function() {
+  var update_background = function(d) {
 
     for (var y = 0; y < 32; ++y)
       for (var x = 0; x < 32; ++x) {
 
         var tile_number = X.Memory.r(X.PPU.bg_tile_map + y*32 + x);
-
+        var as = tile_number;
+        tile_number = X.PPU.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
+if (d) console.log(as.toString(16),tile_number.toString(16),X.PPU.bg_window_tile_data.toString(16),X.PPU.bg_tile_map.toString(16));
         var tile = background_canvas.createImageData(8, 8);
         X.Utils.cache_to_image(X.PPU.cached_tiles[tile_number], tile.data);
         background_canvas.putImageData(tile, x*8, y*8);
@@ -197,13 +199,13 @@ X.Debugger = (function() {
       init_background();
     },
 
-    update: function() {
+    update: function(d) {
 
       update_registers();
       update_flags();
       update_memory();
       update_tiles();
-      update_background();
+      update_background(d);
     },
 
     logs: [],
