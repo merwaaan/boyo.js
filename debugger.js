@@ -17,6 +17,7 @@ X.Debugger = (function() {
 
   var tiles_canvas;
   var background_canvas;
+  var oam = [];
 
   var init_buttons = function() {
 
@@ -152,14 +153,12 @@ X.Debugger = (function() {
 
   var update_tiles = function() {
 
-    for (var y = 0; y < 24; ++y) {
+    for (var y = 0; y < 24; ++y)
       for (var x = 0; x < 16; ++x) {
-
         var tile = tiles_canvas.createImageData(8, 8);
         X.Utils.cache_to_image(X.PPU.cached_tiles[y*16 + x], tile.data);
         tiles_canvas.putImageData(tile, x*8, y*8);
       }
-    }
   };
 
   var init_background = function() {
@@ -168,7 +167,7 @@ X.Debugger = (function() {
     update_background();
   };
 
-  var update_background = function(d) {
+  var update_background = function() {
 
     for (var y = 0; y < 32; ++y)
       for (var x = 0; x < 32; ++x) {
@@ -176,7 +175,7 @@ X.Debugger = (function() {
         var tile_number = X.Memory.r(X.PPU.bg_tile_map + y*32 + x);
         var as = tile_number;
         tile_number = X.PPU.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
-if (d) console.log(as.toString(16),tile_number.toString(16),X.PPU.bg_window_tile_data.toString(16),X.PPU.bg_tile_map.toString(16));
+
         var tile = background_canvas.createImageData(8, 8);
         X.Utils.cache_to_image(X.PPU.cached_tiles[tile_number], tile.data);
         background_canvas.putImageData(tile, x*8, y*8);
@@ -184,6 +183,54 @@ if (d) console.log(as.toString(16),tile_number.toString(16),X.PPU.bg_window_tile
 
     background_canvas.strokeStyle = 'rgb(255,0,0)';
     background_canvas.strokeRect(X.PPU.scroll_x, X.PPU.scroll_y, 160, 144);
+  };
+
+  var init_oam = function() {
+
+    var table = document.querySelector('section#debugger section#video table');
+
+    for (var r = 0; r < 8; ++r) {
+
+      var row = table.insertRow();
+      for (var c = 0; c < 5; ++c) {
+
+        var cell = row.insertCell();
+
+        var canvas = document.createElement('canvas');
+        canvas.width = 8;
+        canvas.height = 8;
+        cell.appendChild(canvas);
+
+        for (var e = 0; e < 4; ++e) {
+          var element = document.createElement('span');
+          cell.appendChild(element);
+        }
+
+        oam[r*5 + c] = cell.children;
+      }
+    }
+
+    update_oam();
+  };
+
+  var update_oam = function() {
+
+    _.each(oam, function(object, index) {
+
+      var index = 0xFE00 + index*4;
+
+      // Draw the corresponding tile
+      var tile_number = X.Memory.r(index + 2);
+      var tile = background_canvas.createImageData(8, 8);
+      X.Utils.cache_to_image(X.PPU.cached_tiles[tile_number], tile.data);
+      object[0].getContext('2d').putImageData(tile, 0, 0);
+
+      // Update the info
+      object[1].textContent = X.Utils.hex8(X.Memory.r(index));
+      object[2].textContent = X.Utils.hex8(X.Memory.r(index + 1));
+      object[3].textContent = X.Utils.hex8(X.Memory.r(index + 2));
+      object[4].textContent = X.Utils.hex8(X.Memory.r(index + 3));
+    });
   };
 
   return {
@@ -197,15 +244,25 @@ if (d) console.log(as.toString(16),tile_number.toString(16),X.PPU.bg_window_tile
       init_breakpoints();
       init_tiles();
       init_background();
+      init_oam();
     },
 
-    update: function(d) {
+    reset: function() {
+
+      // Remove breakpoints
+      _.each(breakpoints, function(address) {
+        toggle_breakpoint(address);
+      });
+    },
+
+    update: function() {
 
       update_registers();
       update_flags();
       update_memory();
       update_tiles();
-      update_background(d);
+      update_background();
+      update_oam();
     },
 
     logs: [],

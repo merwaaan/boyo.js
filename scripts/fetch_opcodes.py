@@ -58,8 +58,8 @@ for t, table in enumerate(soup.find_all('table')[:2]):
         
       instruction = cell.contents[0].encode('utf-8')
       specs = cell.contents[2].split()
-      bytes = specs[0].encode('utf-8')
-      cycles = specs[1].encode('utf-8')
+      bytes = int(specs[0].encode('utf-8'))
+      cycles = int(specs[1].encode('utf-8').split('/')[0]) # TODO handle X/Y cycles
 
       # Use alternative mnemonics for convenience
       if instruction in alternatives:
@@ -90,4 +90,4 @@ with open('opcodes.txt', 'w') as file:
   file.write(js)
   file.close()
 
-#print(js)
+print(js)

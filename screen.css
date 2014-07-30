@@ -54,3 +54,7 @@ canvas {
 section#debugger section {
 
 }
+
+section#video span {
+	margin: 0.1em;
+}

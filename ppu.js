@@ -5,7 +5,6 @@ X.PPU = (function() {
   'use strict';
 
   var canvas;
-  var canvas_ctx;
 
   var colors = [
     [0xFF, 0xFF, 0xFF],
@@ -14,6 +13,17 @@ X.PPU = (function() {
     [0x00, 0x00, 0x00]
   ];
 
+	var colors____ = [
+    '#FFFFFF',
+   	'#AAAAAA',
+    '#666666',
+    '#000000'
+  ];
+
+  var background_maps;
+  var tile_data;
+  var oam;
+
   var vblank = function() {
   	X.CPU.request_interrupt(0);
   	return true;
@@ -21,7 +31,7 @@ X.PPU = (function() {
 
   return {
 
-    // LCL control
+    // LCD control
 
     get LCDC() { return X.Memory.r(0xFF40); },
   	get display_enable() { return X.Utils.bit(this.LCDC, 7); },
@@ -58,96 +68,178 @@ X.PPU = (function() {
     get obj_palette_0() { return X.Memory.r(0xFF48); },
     get obj_palette_1() { return X.Memory.r(0xFF49); },
   	
-  	cached_bg_palette: [0, 1, 2, 3],
-  	cached_obj_palette_0: [0, 1, 2, 3],
-  	cached_obj_palette_1: [0, 1, 2, 3],
+  	cached_bg_colors: [0, 1, 2, 3],
+  	cached_obj_colors_0: [0, 1, 2, 3],
+  	cached_obj_colors_1: [0, 1, 2, 3],
 
-    // DMA transfer
+  	/**
+  		* Memory mapping
+  		*/
 
-    sprite: {
-      position: [],
-      number: 0
+		r: function(address) {
+
+			// Tile data
+			if (address < 0x9800) {
+				return tile_data[address - 0x8000];
+			}
+
+			// Background maps
+			else if (address < 0xA000) {
+				return background_maps[address - 0x9800];
+			}
+
+			// OAM
+			else {
+				return oam[address - 0xFE00];
+			}
+		},
+
+		w: function(address, value) {
+
+			// Tile data
+			if (address < 0x9800) {
+				tile_data[address - 0x8000] = value;
+				this.update_cached_tile(address - 0x8000);
+				return value
+			}
+
+			// Background maps
+			else if (address < 0xA000) {
+				return background_maps[address - 0x9800] = value;
+			}
+
+			// OAM
+			else {
+				return oam[address - 0xFE00] = value;
+			}
+		},
+
+		dma_transfer: function(value) {
+
+			var starting_address = value * 0x100;
+
+			for (var i = 0; i < 160; ++i) {
+				oam[i] = X.Memory.r(starting_address + i);
+			}
+		},
+
+		/**
+			* 
+			*/
+
+    cached_tiles: new Array(384),
+
+    update_cached_tile: function(index) {
+
+    	var tile_number = Math.floor(index / 16);
+    	var memory_row = index - index % 2;
+    	var image_row = Math.floor((index % 16) / 2);
+
+    	for (var p = 0; p < 8; ++p) {
+
+    		var a = X.Utils.bit(tile_data[memory_row], p);
+        var b = X.Utils.bit(tile_data[memory_row + 1], p);
+        var c = a | b << 1;
+              
+        this.cached_tiles[tile_number][image_row*8 + (7-p)] = c;
+      }
+
     },
-
-    cached_tiles: [],
 
     init: function() {
 
-      canvas = document.querySelector('section#game canvas');
-      canvas_ctx = canvas.getContext('2d');
+			background_maps = new Array(2048);
+		  tile_data = new Array(6144);
+		  oam = new Array(160);
 
-      // Maintain cached tiles for faster access
+		  X.Utils.fill(background_maps);
+		  X.Utils.fill(tile_data);
+		  X.Utils.fill(oam);
 
-      for (var t = 0; t < 384; ++t) { // For each tile...
+    	canvas = document.querySelector('section#game canvas').getContext('2d');
 
-        var tile = new Array(64);
-        X.Utils.fill(tile);
-        this.cached_tiles.push(tile);
-
-        for (var r = 0; r < 16; ++r) { // For each row...
-
-          X.Memory.watch(0x8000 + t*16 + r, function(ppu, t, r) {
-            return function(prop, old_val, new_val) {
-
-              if (prop % 2 == 0) {
-                var l1 = new_val;
-                var l2 = X.Memory.r(prop + 1);
-              }
-              else {
-                var l1 = X.Memory.r(prop - 1);
-                var l2 = new_val;
-              }
-
-              for (var p = 0; p < 8; ++p) {
-                var a = X.Utils.bit(l1, p);
-                var b = X.Utils.bit(l2, p);
-                var c = a | b << 1;
-              
-                ppu.cached_tiles[t][Math.floor(r/2)*8 + (7-p)] = c;
-              }
-            }
-          }(this, t, r));
-        }
+      for (var t = 0, l = this.cached_tiles.length; t < l; ++t) {
+      	var pixels = new Array(64);
+      	X.Utils.fill(pixels);
+      	this.cached_tiles[t] = pixels;
       }
 
       // Maintain cached palettes for faster access
 
-      var palettes = [this.cached_bg_palette, this.cached_obj_palette_0, this.cached_obj_palette_1];
+      var palettes = [this.cached_bg_colors, this.cached_obj_colors_0, this.cached_obj_colors_1];
       
       _.each(palettes, function(palette, index) {
       	X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
 	      	for (var b = 0; b < 4; ++b)
 						palette[b] = colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
-    		}.bind(this));
-      }); 
+    		});
+      });
+    },
 
-      //
+    reset: function() {
 
-      this.mode = 2;
+		  X.Utils.fill(background_maps);
+		  X.Utils.fill(tile_data);
+		  X.Utils.fill(oam);
+
+    	this.mode = 2; // Really necessary??
     },
 
     draw_frame: function() {
 
-    	canvas_ctx.clearRect(0, 0, 160, 144);
+    	// Background
 
-      var x0 = Math.floor(this.scroll_x / 32);
-      var y0 = Math.floor(this.scroll_y / 32);
+    	canvas.clearRect(0, 0, 160, 144);
 
-      for (var dy = 0; dy < 18; ++dy)
-        for (var dx = 0; dx < 20; ++dx) {
+      var x0 = Math.floor(this.scroll_x / 8);
+      var y0 = Math.floor(this.scroll_y / 8);
+
+			var ox = this.scroll_x % 8;
+      var oy = this.scroll_y % 8;
+          
+			for (var dy = 0; dy <= 18; ++dy)
+        for (var dx = 0; dx <= 20; ++dx) {
 
           var tx = x0 + dx;
           var ty = y0 + dy;
-          
+
           var tile_number = X.Memory.r(this.bg_tile_map + ty*32 + tx);
           tile_number = this.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
           
-          var tile = canvas_ctx.createImageData(8, 8);
-          X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
-          canvas_ctx.putImageData(tile, dx*8, dy*8);
+          var tile = canvas.createImageData(8, 8);
+	        X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
+	        canvas.putImageData(tile, dx*8-ox, dy*8-oy);
         }
 
-      this.line_y = 0x90;
+      // Objects
+
+      for (var o = 0; o < 40; ++o) {
+
+      	var index = o*4;
+      	var pos_y = oam[index];
+      	var pos_x = oam[index + 1];
+
+      	// Skip the object if hidden off-screen
+      	if (pos_y == 0 || pos_y >= 160 || pos_x == 0 || pos_x >= 168)
+      		continue;
+
+      	pos_y -= 16;
+      	pos_x -= 8;
+
+      	var tile_number = oam[index + 2];
+      	var attributes = oam[index + 3];
+
+				var tile = canvas.createImageData(8, 8);
+        X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
+        canvas.putImageData(tile, pos_x, pos_y);
+      }
+
+      // TODO different palettes
+      // TODO flip
+      // TODO depth priority
+      // TODO window
+
+      this.line_y = 0x90; // Really necessary?
     },
 
     mode_cycles: 2,
@@ -169,7 +261,7 @@ X.PPU = (function() {
           if (this.mode_cycles > this.mode_durations[0]) {
           	if (this.line_y >= 144) {
 	            this.change_mode(1);
-	            //this.draw_frame();
+	            this.draw_frame();
       				return vblank();
 	          }
           	else {

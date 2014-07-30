@@ -18,18 +18,37 @@ X.Cartridge = (function() {
     },
 
     0x1: { // MBC1
-      bank: 1,
+      rom_bank: 0,
+      ram_bank: 0,
+      mode: 0, // 0 -> ROM banking, 1 -> RAM banking
+      ram_enabled: false,
       r: function(address) {
-        return address < 0x4000 ? data[address] : data[this.bank*0x4000 + address - 0x4000];
+        if (address < 0x4000) {
+          return data[address];  
+        }
+        else if (address < 0x8000) {
+         return data[this.rom_bank*0x4000 + address - 0x4000];
+        }
+        else if (address < 0xC000) {
+          return data[0xA000 + this.ram_bank*0x2000 + address - 0x2000]; // TODO check
+        }
       },
       w: function(address, value) {
-        if (address >= 0x2000 && address < 0x4000) {
-          this.bank = (this.bank & 0x60) | (value & 0x1F);
+        if (address < 0x2000) {
+          this.ram_enabled = value == 0;
         }
-        else if (address >= 0x4000 && address < 0x6000) {
-          this.bank = (this.bank & 0x1F) | (value & 0x3) << 5;
+        else if (address < 0x4000) {
+          this.rom_bank = (this.rom_bank & 0x60) | (value & 0x1F);
         }
-        //console.log('switched to bank ',this.bank);
+        else if (address < 0x6000) {
+          if (mode == 0)
+            this.rom_bank = (this.rom_bank & 0x1F) | (value & 0x3) << 5;
+          else
+            this.ram_bank = value & 0x3;
+        }
+        else {
+          this.mode = value; // & 1 ???
+        }
       }
     },
   };
@@ -50,7 +69,7 @@ X.Cartridge = (function() {
 
   	init: function(bytes) {
 
-  		data = bytes;
+      data = bytes;
 
       this.mbc = MemoryBankControllers[this.type];
   	},

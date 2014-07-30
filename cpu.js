@@ -30,6 +30,9 @@ X.CPU = (function() {
       * Interrupts
       */
 
+    halted: false,
+    stopped: false,
+
     interrupt_master_enable: true,
     get interrupt_enable() { return X.Memory.r(0xFFFF); },
     get interrupt_request() { return X.Memory.r(0xFF0F); }, set interrupt_request(x) { X.Memory.w(0xFF0F, x); },
@@ -39,6 +42,11 @@ X.CPU = (function() {
     },
 
     check_interrupts: function() {
+
+      // Interrupt requests terminate HALT
+      if (this.interrupt_request > 0) {
+        this.halted = false;
+      }
 
       if (this.interrupt_master_enable && this.interrupt_request & this.interrupt_enable > 0)
         for (var b = 0; b < 5; ++b)
@@ -92,32 +100,38 @@ X.CPU = (function() {
 
     init: function() {
 
-      //
+      // Generate the instruction set
       this.instructions = X.InstructionImplementations.generate();
+    },
+
+    reset: function() {
+
+      // The only certainty is that the PC is at 0 on reset
+      this.PC = 0;
     },
 
     step: function() {
       
-      // Fetch
-
-      var opcode = X.Memory.r(this.PC);
-      opcode = opcode == 0xCB ? 0x100 + X.Memory.r(this.PC + 1) : opcode;  
-
-      var instruction = this.instructions[opcode];
-      var bytes = parseInt(X.InstructionImplementations.opcodes[opcode][1]); // TODO just store length and cycles as numbers
-      var cycles = parseInt(X.InstructionImplementations.opcodes[opcode][2]);
-
-      var operands = X.Memory.r_(this.PC + 1, bytes);
-
-      // Execute
+      if (!this.halted && !this.stopped) {
       
-      //X.Debugger.log_instruction(opcode);
+        // Fetch
+        
+        var opcode = X.Memory.r(this.PC);
+        opcode = opcode == 0xCB ? 0x100 + X.Memory.r(this.PC + 1) : opcode;  
 
-      this.PC = X.Utils.wrap16(this.PC + bytes);
-      instruction(operands);
+        var instruction = this.instructions[opcode];
+        var bytes = X.InstructionImplementations.opcodes[opcode][1];
+        var cycles = X.InstructionImplementations.opcodes[opcode][2]; // TODO handle X/Y cycles
+
+        var operands = X.Memory.r_(this.PC + 1, bytes);
+
+        // Execute
+        
+        this.PC = X.Utils.wrap16(this.PC + bytes);
+        instruction(operands);
+      }
 
       // Check for interrupts
-      
       this.check_interrupts();
 
       return cycles;

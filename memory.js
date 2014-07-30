@@ -28,6 +28,23 @@ X.Memory = (function() {
 
 				return X.Cartridge.r(address);
     	}
+
+      // VRAM
+      else if (address < 0xA000) {
+        return X.PPU.r(address);
+      }
+
+      // RAM
+      else if (address < 0xC000) {
+        return X.Cartridge.r(address);
+      }
+
+      // OAM
+      else if (address >= 0xFE00 && address < 0xFEA0) {
+        return X.PPU.r(address);
+      }
+
+      // Joypad
       else if (address == 0xFF00) {
         return X.Joypad.r();
       }
@@ -52,18 +69,51 @@ X.Memory = (function() {
       if (address < 0x8000) {
         return X.Cartridge.w(address, value);
       }
+
+      // VRAM
+      else if (address < 0xA000) {
+        return X.PPU.w(address, value);
+      }
+
+      // RAM
+      else if (address < 0xC000) {
+        return X.Cartridge.w(address, value);
+      }
+
+      // OAM
+      else if (address >= 0xFE00 && address < 0xFEA0) {
+        return X.PPU.w(address, value);
+      }
+
+      // Joypad
       else if (address == 0xFF00) {
         return X.Joypad.w(value);
       }
+
+      // Blargg's tests
       else if (address == 0xFF01) {
-        //console.log(String.fromCharCode(value)); // Blaarg's tests
+        //console.log(String.fromCharCode(value));
       }
+
+      else if (address == 0xFF46) {
+        X.PPU.dma_transfer(value);
+      }
+
       return data[address] = value;
     },
 
     watch: function(address, handler) {
 
       data.watch(address, handler);
+    },
+
+    init: function() {
+
+    },
+    
+    reset: function() {
+
+      bootstraped = false;      
     }
 
 	};
