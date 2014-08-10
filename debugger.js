@@ -22,10 +22,10 @@ X.Debugger = (function() {
   var init_buttons = function() {
 
     var buttons = document.querySelectorAll('section#buttons button');
-    buttons[0].addEventListener('click', function() { X.GB.pause(); });
+    buttons[0].addEventListener('click', function() { X.GB.pause(); buttons[0].disabled = true; buttons[1].disabled = false; buttons[2].disabled = false; });
     buttons[1].addEventListener('click', function() { X.GB.step(); });
-    buttons[2].addEventListener('click', function() { X.GB.run(); });
-  };
+    buttons[2].addEventListener('click', function() { X.GB.run(); buttons[2].disabled = true; buttons[0].disabled = false;buttons[1].disabled = true;  }); 
+ }; // TODO initial states
 
   var init_registers = function() {
 
@@ -156,7 +156,7 @@ X.Debugger = (function() {
     for (var y = 0; y < 24; ++y)
       for (var x = 0; x < 16; ++x) {
         var tile = tiles_canvas.createImageData(8, 8);
-        X.Utils.cache_to_image(X.PPU.cached_tiles[y*16 + x], tile.data);
+        X.Utils.cache_to_image(X.Video.cached_tiles[y*16 + x], tile.data);
         tiles_canvas.putImageData(tile, x*8, y*8);
       }
   };
@@ -172,17 +172,17 @@ X.Debugger = (function() {
     for (var y = 0; y < 32; ++y)
       for (var x = 0; x < 32; ++x) {
 
-        var tile_number = X.Memory.r(X.PPU.bg_tile_map + y*32 + x);
+        var tile_number = X.Memory.r(X.Video.bg_tile_map + y*32 + x);
         var as = tile_number;
-        tile_number = X.PPU.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
+        tile_number = X.Video.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
 
         var tile = background_canvas.createImageData(8, 8);
-        X.Utils.cache_to_image(X.PPU.cached_tiles[tile_number], tile.data);
+        X.Utils.cache_to_image(X.Video.cached_tiles[tile_number], tile.data);
         background_canvas.putImageData(tile, x*8, y*8);
       }
 
     background_canvas.strokeStyle = 'rgb(255,0,0)';
-    background_canvas.strokeRect(X.PPU.scroll_x, X.PPU.scroll_y, 160, 144);
+    background_canvas.strokeRect(X.Video.scroll_x, X.Video.scroll_y, 160, 144);
   };
 
   var init_oam = function() {
@@ -222,7 +222,7 @@ X.Debugger = (function() {
       // Draw the corresponding tile
       var tile_number = X.Memory.r(index + 2);
       var tile = background_canvas.createImageData(8, 8);
-      X.Utils.cache_to_image(X.PPU.cached_tiles[tile_number], tile.data);
+      X.Utils.cache_to_image(X.Video.cached_tiles[tile_number], tile.data);
       object[0].getContext('2d').putImageData(tile, 0, 0);
 
       // Update the info

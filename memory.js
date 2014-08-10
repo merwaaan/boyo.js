@@ -27,7 +27,7 @@ X.Memory = (function() {
 
       // VRAM
       else if (address < 0xA000) {
-        return X.PPU.r(address);
+        return X.Video.r(address);
       }
 
       // RAM
@@ -37,12 +37,17 @@ X.Memory = (function() {
 
       // OAM
       else if (address >= 0xFE00 && address < 0xFEA0) {
-        return X.PPU.r(address);
+        return X.Video.r(address);
       }
 
       // Joypad
       else if (address == 0xFF00) {
         return X.Joypad.r();
+      }
+
+      // Sound registers
+      else if (address >= 0xFF10 && address <= 0xFF3F) {
+        return X.Audio.r(address);
       }
 
     	return data[address];
@@ -68,7 +73,7 @@ X.Memory = (function() {
 
       // VRAM
       else if (address < 0xA000) {
-        return X.PPU.w(address, value);
+        return X.Video.w(address, value);
       }
 
       // RAM
@@ -78,7 +83,7 @@ X.Memory = (function() {
 
       // OAM
       else if (address >= 0xFE00 && address < 0xFEA0) {
-        return X.PPU.w(address, value);
+        return X.Video.w(address, value);
       }
 
       // Joypad
@@ -96,8 +101,14 @@ X.Memory = (function() {
         data[address] = 0;
       }
 
+      // Sound registers
+      else if (address >= 0xFF10 && address <= 0xFF3F) {
+        return X.Audio.w(address, value);
+      }
+
+      // DMA transfers
       else if (address == 0xFF46) {
-        X.PPU.dma_transfer(value);
+        X.Video.dma_transfer(value);
       }
 
       return data[address] = value;

@@ -1,6 +1,6 @@
 var X = X || {};
 
-X.PPU = (function() {
+X.Video = (function() {
 
   'use strict';
 

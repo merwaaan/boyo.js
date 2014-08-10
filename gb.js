@@ -15,7 +15,8 @@ X.GB = (function() {
       
       X.Memory.init();
       X.CPU.init();
-      X.PPU.init();
+      X.Video.init();
+      X.Audio.init();
       X.Joypad.init();
       X.Debugger.init();
 
@@ -47,7 +48,8 @@ X.GB = (function() {
 
       X.Memory.reset();
       X.CPU.reset();
-      X.PPU.reset();
+      X.Video.reset();
+      X.Audio.reset();
       X.Joypad.reset();
       X.Debugger.reset();
     },
@@ -63,7 +65,7 @@ X.GB = (function() {
           return;  
         }
 
-      } while (!X.PPU.step(X.CPU.step()));
+      } while (!X.Video.step(X.CPU.step()));
 
       // Repeat...
       if (!paused) {
@@ -82,7 +84,7 @@ X.GB = (function() {
 
     step: function() {
 
-      X.PPU.step(X.CPU.step());
+      X.Video.step(X.CPU.step());
       X.Debugger.update();
     },
 

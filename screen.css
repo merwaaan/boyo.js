@@ -1,60 +1,60 @@
+@import url(http://fonts.googleapis.com/css?family=Pontano+Sans);
+@import url(http://fonts.googleapis.com/css?family=Inconsolata);
+
 * {
 	margin: 0;
 }
 
-body {
-	font-family: monospace;
+body  {
+	font-family: "Pontano Sans";
 }
 
-table {
-  border: 1px solid black;
-  border-collapse: collapse;
-}
-
-td {
-  border: 1px solid gray;
-}
-
-header {
-	background-color: #F56991;
-}
-
-section#game {
-	background-color: #D1F2A5;
-}
-
-section#debugger {
-	background-color: #EFFAB4;
-}
-
-footer {
-	background-color: #FF9F80;
-}
-
-section#registers td {
-
-	padding: 0.3em;
-}
-
-section#registers td {
-
-	margin-left: 1em;
-	text-align: right;
-}
-
-section#registers td:first-child, section#memory td:first-child {
-	font-weight: bold;
+header h1, header h2, header h3 {
+	display: inline;
+	font-weight: lighter;
 }
 
 canvas {
-	float: right;
-	border: 1px solid green;
+	border: 1px solid lightgray;
 }
 
-section#debugger section {
-
+section#game {
+	text-align: center;
 }
 
-section#video span {
-	margin: 0.1em;
+section#game table {
+	margin: auto;
+	border-spacing: 2em;
+}
+
+section#debugger {
+	font-family: "Inconsolata";
+}
+
+section#debugger table {
+	border: 1px solid black;
+	border-collapse: collapse;
+}
+
+section#debugger table td {
+	border: 1px solid black;
+}
+
+section#debugger section#buttons button {
+	width: 4em;
+}
+
+section#registers, section#flags, section#memory, section#breakpoints {
+	display: inline-block;
+	vertical-align: top;
+}
+
+section#flags label:after {
+	content: "\000A";
+	white-space: pre;
+}
+
+section#video canvas, section#video table#oam {
+	display: inline-block;
+	vertical-align: top;
 }
