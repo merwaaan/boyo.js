@@ -35,7 +35,7 @@ X.Cartridge = (function() {
       },
       w: function(address, value) {
         if (address < 0x2000) {
-          this.ram_enabled = value == 0;
+          this.ram_enabled = value == 0x0A;
         }
         else if (address < 0x4000) {
           this.rom_bank = (this.rom_bank & 0x60) | (value & 0x1F);

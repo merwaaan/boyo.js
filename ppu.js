@@ -50,7 +50,7 @@ X.PPU = (function() {
     get oam_interrupt() { return X.Utils.bit(this.STAT, 5); },
     get vblank_interrupt() { return X.Utils.bit(this.STAT, 4); },
     get hblank_interrupt() { return X.Utils.bit(this.STAT, 3); },
-    get line_y_coincidence_flag() { return true; }, // TODO
+    get line_y_coincidence() { return X.Utils.bit(this.STAT, 2); }, set line_y_coincidence(x) { X.Memory.w(0xFF41, this.STAT & 0xFB | x) },
     get mode() { return this.STAT & 0x3; }, set mode(x) { X.Memory.w(0xFF41, this.STAT & 0x7C | x); },
 
     // Position and scrolling
@@ -187,59 +187,68 @@ X.PPU = (function() {
 
     draw_frame: function() {
 
+    	if (!this.display_enable)
+    		return;
+
     	// Background
 
-    	canvas.clearRect(0, 0, 160, 144);
+    	if (this.bg_enable) {
 
-      var x0 = Math.floor(this.scroll_x / 8);
-      var y0 = Math.floor(this.scroll_y / 8);
+	    	canvas.clearRect(0, 0, 160, 144);
 
-			var ox = this.scroll_x % 8;
-      var oy = this.scroll_y % 8;
-          
-			for (var dy = 0; dy <= 18; ++dy)
-        for (var dx = 0; dx <= 20; ++dx) {
+	      var x0 = Math.floor(this.scroll_x / 8);
+	      var y0 = Math.floor(this.scroll_y / 8);
 
-          var tx = x0 + dx;
-          var ty = y0 + dy;
+				var ox = this.scroll_x % 8;
+	      var oy = this.scroll_y % 8;
+	          
+				for (var dy = 0; dy <= 18; ++dy)
+	        for (var dx = 0; dx <= 20; ++dx) {
 
-          var tile_number = X.Memory.r(this.bg_tile_map + ty*32 + tx);
-          tile_number = this.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
-          
-          var tile = canvas.createImageData(8, 8);
-	        X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
-	        canvas.putImageData(tile, dx*8-ox, dy*8-oy);
-        }
+	          var tx = x0 + dx;
+	          var ty = y0 + dy;
+
+	          var tile_number = X.Memory.r(this.bg_tile_map + ty*32 + tx);
+	          tile_number = this.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
+	          
+	          var tile = canvas.createImageData(8, 8);
+		        X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
+		        canvas.putImageData(tile, dx*8-ox, dy*8-oy);
+	        }
+			}
 
       // Objects
 
-      for (var o = 0; o < 40; ++o) {
+      if (this.obj_enable) {
+      
+	      for (var o = 0; o < 40; ++o) {
 
-      	var index = o*4;
-      	var pos_y = oam[index];
-      	var pos_x = oam[index + 1];
+	      	var index = o*4;
+	      	var pos_y = oam[index];
+	      	var pos_x = oam[index + 1];
 
-      	// Skip the object if hidden off-screen
-      	if (pos_y == 0 || pos_y >= 160 || pos_x == 0 || pos_x >= 168)
-      		continue;
+	      	// Skip the object if hidden off-screen
+	      	if (pos_y == 0 || pos_y >= 160 || pos_x == 0 || pos_x >= 168)
+	      		continue;
 
-      	pos_y -= 16;
-      	pos_x -= 8;
+	      	pos_y -= 16;
+	      	pos_x -= 8;
 
-      	var tile_number = oam[index + 2];
-      	var attributes = oam[index + 3];
+	      	var tile_number = oam[index + 2];
+	      	var attributes = oam[index + 3];
 
-				var tile = canvas.createImageData(8, 8);
-        X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
-        canvas.putImageData(tile, pos_x, pos_y);
-      }
+					var tile = canvas.createImageData(8, 8);
+	        X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
+	        canvas.putImageData(tile, pos_x, pos_y);
+	      }
+			}
 
       // TODO different palettes
       // TODO flip
       // TODO depth priority
       // TODO window
 
-      this.line_y = 0x90; // Really necessary?
+      this.line_y = 0x90; // TODO really necessary?
     },
 
     mode_cycles: 2,
@@ -291,7 +300,12 @@ X.PPU = (function() {
           }
           break;
       }
-    }
+
+	    // Check line coincidence
+	    if (this.line_y == this.line_y_compare) {
+	    	//this.line_y_coincidence = true;
+	    }
+	  }
   	
   };
   

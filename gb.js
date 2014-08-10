@@ -18,6 +18,8 @@ X.GB = (function() {
       X.PPU.init();
       X.Joypad.init();
       X.Debugger.init();
+
+      X.Cartridge.init(tetris);
           
       this.reset();
 

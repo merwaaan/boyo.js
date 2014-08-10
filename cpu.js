@@ -4,6 +4,10 @@ X.CPU = (function() {
 
   'use strict';
 
+  var DIV_accumulator = 0;
+  var TIMA_accumulator = 0;
+  var timer_clocks = [1024, 16, 64, 256]; //[4096, 262144, 65536, 16384];
+
   return {
 
     /**
@@ -17,7 +21,7 @@ X.CPU = (function() {
     B: 0, C: 0, get BC() { return X.Utils.hilo(this.B, this.C); }, set BC(x) { this.B = X.Utils.hi(x); this.C = X.Utils.lo(x); },
     D: 0, E: 0, get DE() { return X.Utils.hilo(this.D, this.E); }, set DE(x) { this.D = X.Utils.hi(x); this.E = X.Utils.lo(x); },
     H: 0, L: 0, get HL() { return X.Utils.hilo(this.H, this.L); }, set HL(x) { this.H = X.Utils.hi(x); this.L = X.Utils.lo(x); },
-    
+
     get_flag: function(mask) { return !!(this.F & mask); },
     set_flag: function(mask, set) { set ? this.F |= mask : this.F &= ~mask; },
    
@@ -26,6 +30,38 @@ X.CPU = (function() {
     get addsub() { return this.get_flag(1 << 6); }, set addsub(x) { this.set_flag(1 << 6, x); },
     get zero() { return this.get_flag(1 << 7); }, set zero(x) { this.set_flag(1 << 7, x); },
     
+    /**
+      * Timer and divider
+      */
+
+    get DIV() { return X.Memory.r(0xFF04); }, set DIV(x) { X.Memory.w(0xFF04, x); },
+    get TIMA() { return X.Memory.r(0xFF05); }, set TIMA(x) { X.Memory.w(0xFF05, x); },
+    get TMA() { return X.Memory.r(0xFF06); }, set TMA(x) { X.Memory.w(0xFF06, x); },
+    get TAC() { return X.Memory.r(0xFF07); }, set TAC(x) { X.Memory.w(0xFF07, x); },
+    get timer_enable() { return X.Utils.bit(this.TAC, 2); },
+    get timer_clock() { return this.TAC & 0x3; },
+
+    update_timers: function(cycles) {
+
+      DIV_accumulator += cycles;
+      if (DIV_accumulator > 0xFF) {
+        this.DIV = X.Utils.wrap8(this.DIV + 1);
+        DIV_accumulator -= 0xFF;
+      }
+
+      if (this.timer_enable) {
+        TIMA_accumulator += cycles;
+        if (TIMA_accumulator >= timer_clocks[this.timer_clock]) {
+          this.TIMA += 1;
+          TIMA_accumulator -= timer_clocks[this.timer_clock];
+          if (this.TIMA > 0xFF) {
+            this.request_interrupt(2);
+            this.TIMA = this.TMA;
+          }
+        }
+      }
+    },
+
     /**
       * Interrupts
       */
@@ -48,6 +84,7 @@ X.CPU = (function() {
         this.halted = false;
       }
 
+      // Execute interrupts if appropriate
       if (this.interrupt_master_enable && this.interrupt_request & this.interrupt_enable > 0)
         for (var b = 0; b < 5; ++b)
           if (X.Utils.bit(this.interrupt_request, b) && X.Utils.bit(this.interrupt_enable, b))
@@ -60,7 +97,7 @@ X.CPU = (function() {
       this.interrupt_master_enable = false;
       this.interrupt_request &= ~(1 << bit);
 
-      // Jump to the appropriate address
+      // Jump to the address of the interrupt procedure
       this.call(0x40 + 8*bit);
     },
 
@@ -129,6 +166,10 @@ X.CPU = (function() {
         
         this.PC = X.Utils.wrap16(this.PC + bytes);
         instruction(operands);
+
+        // Update timers
+
+        this.update_timers(cycles);
       }
 
       // Check for interrupts

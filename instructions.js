@@ -286,6 +286,7 @@ X.InstructionImplementations = (function() {
     'HALT': function(parameters, parameter_names) {
       return function(operands) {
         console.log('HALT');
+        X.CPU.halted = true;
       };
     },
 
@@ -581,6 +582,7 @@ X.InstructionImplementations = (function() {
     'STOP': function(parameters, parameter_names) {
       return function(operands) {
         console.log('STOP');
+        X.CPU.stopped = true;
       };
     },
     

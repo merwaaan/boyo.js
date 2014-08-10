@@ -1,0 +1,22 @@
+CPU
+- fix frequency
+- cycles wrt branching
+- cycles wrt interrupts
+
+VIDEO
+- different palettes
+- window support
+- STAT interrupts
+
+AUDIO
+- sound support...
+
+GAMES
+- MBC2
+- MBC3
+- save/load (localStorage?)
+
+MISC
+- fix joypad
+- fullscreen mode
+- nice UI
