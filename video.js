@@ -7,18 +7,12 @@ X.Video = (function() {
   var canvas;
 
   var colors = [
-    [0xFF, 0xFF, 0xFF],
-   	[0xAA, 0xAA, 0xAA],
-    [0x66, 0x66, 0x66],
-    [0x00, 0x00, 0x00]
+    [0xFF, 0xFF, 0xFF, 0xFF],
+   	[0xAA, 0xAA, 0xAA, 0xFF],
+    [0x66, 0x66, 0x66, 0xFF],
+    [0x00, 0x00, 0x00, 0xFF]
   ];
-
-	var colors____ = [
-    '#FFFFFF',
-   	'#AAAAAA',
-    '#666666',
-    '#000000'
-  ];
+  var color_transparent = [0, 0, 0, 0];
 
   var background_maps;
   var tile_data;
@@ -68,9 +62,9 @@ X.Video = (function() {
     get obj_palette_0() { return X.Memory.r(0xFF48); },
     get obj_palette_1() { return X.Memory.r(0xFF49); },
   	
-  	cached_bg_colors: [0, 1, 2, 3],
-  	cached_obj_colors_0: [0, 1, 2, 3],
-  	cached_obj_colors_1: [0, 1, 2, 3],
+  	cached_bg_colors: [0, 0, 0, 0],
+  	cached_obj_colors_0: [0, 0, 0, 0],
+  	cached_obj_colors_1: [0, 0, 0, 0],
 
   	/**
   		* Memory mapping
@@ -172,6 +166,8 @@ X.Video = (function() {
       	X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
 	      	for (var b = 0; b < 4; ++b)
 						palette[b] = colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
+          if (index > 0)
+            palette[0] = color_transparent;
     		});
       });
     },
@@ -190,13 +186,13 @@ X.Video = (function() {
     	if (!this.display_enable)
     		return;
 
+      canvas.clearRect(0, 0, 160, 144);
+      
     	// Background
 
     	if (this.bg_enable) {
 
-	    	canvas.clearRect(0, 0, 160, 144);
-
-	      var x0 = Math.floor(this.scroll_x / 8);
+	    	var x0 = Math.floor(this.scroll_x / 8);
 	      var y0 = Math.floor(this.scroll_y / 8);
 
 				var ox = this.scroll_x % 8;
@@ -212,9 +208,13 @@ X.Video = (function() {
 	          tile_number = this.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
 	          
 	          var tile = canvas.createImageData(8, 8);
-		        X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
-		        canvas.putImageData(tile, dx*8-ox, dy*8-oy);
-	        }
+		        X.Utils.cache_to_image(this.cached_tiles[tile_number], this.cached_bg_colors, tile.data);
+		        //canvas.putImageData(tile, dx*8-ox, dy*8-oy);
+var c = document.createElement('canvas');
+          c.width = c.height = 8;
+          c.getContext("2d").putImageData(tile, 0, 0);
+          canvas.drawImage(c, dx*8-ox, dy*8-oy);
+        }
 			}
 
       // Objects
@@ -227,7 +227,7 @@ X.Video = (function() {
 	      	var pos_y = oam[index];
 	      	var pos_x = oam[index + 1];
 
-	      	// Skip the object if hidden off-screen
+	      	// Skip the object if it is hidden off-screen
 	      	if (pos_y == 0 || pos_y >= 160 || pos_x == 0 || pos_x >= 168)
 	      		continue;
 
@@ -238,8 +238,11 @@ X.Video = (function() {
 	      	var attributes = oam[index + 3];
 
 					var tile = canvas.createImageData(8, 8);
-	        X.Utils.cache_to_image(this.cached_tiles[tile_number], tile.data);
-	        canvas.putImageData(tile, pos_x, pos_y);
+          X.Utils.cache_to_image(this.cached_tiles[tile_number], this.cached_obj_colors_0, tile.data);
+	        var c = document.createElement('canvas');
+          c.width = c.height = 8;
+          c.getContext("2d").putImageData(tile, 0, 0);
+          canvas.drawImage(c, pos_x, pos_y);
 	      }
 			}
 
@@ -276,7 +279,12 @@ X.Video = (function() {
 	          }
           	else {
 	            this.change_mode(2);
-	            ++this.line_y;  
+	            ++this.line_y;
+
+              // Check line coincidence
+              if (this.line_y == this.line_y_compare) {
+                //this.line_y_coincidence = true;
+              }
 	          }
 	        }
           break;
@@ -301,11 +309,6 @@ X.Video = (function() {
           }
           break;
       }
-
-	    // Check line coincidence TODO move on line start
-	    if (this.line_y == this.line_y_compare) {
-	    	//this.line_y_coincidence = true;
-	    }
 	  }
   	
   };

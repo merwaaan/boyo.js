@@ -156,8 +156,8 @@ X.Debugger = (function() {
     for (var y = 0; y < 24; ++y)
       for (var x = 0; x < 16; ++x) {
         var tile = tiles_canvas.createImageData(8, 8);
-        X.Utils.cache_to_image(X.Video.cached_tiles[y*16 + x], tile.data);
-        tiles_canvas.putImageData(tile, x*8, y*8);
+        //X.Utils.cache_to_image(X.Video.cached_tiles[y*16 + x], X.Video.cached_obj_colors_0, tile.data);
+        //tiles_canvas.putImageData(tile, x*8, y*8);
       }
   };
 
@@ -169,6 +169,8 @@ X.Debugger = (function() {
 
   var update_background = function() {
 
+    background_canvas.clearRect(0, 0, 256, 256);
+
     for (var y = 0; y < 32; ++y)
       for (var x = 0; x < 32; ++x) {
 
@@ -177,8 +179,12 @@ X.Debugger = (function() {
         tile_number = X.Video.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
 
         var tile = background_canvas.createImageData(8, 8);
-        X.Utils.cache_to_image(X.Video.cached_tiles[tile_number], tile.data);
-        background_canvas.putImageData(tile, x*8, y*8);
+        X.Utils.cache_to_image(X.Video.cached_tiles[tile_number], X.Video.cached_bg_colors, tile.data);
+        //background_canvas.putImageData(tile, x*8, y*8);
+        var c = document.createElement('canvas');
+          c.width = c.height = 8;
+          c.getContext("2d").putImageData(tile, 0, 0);
+          background_canvas.drawImage(c, x*8, y*8);
       }
 
     background_canvas.strokeStyle = 'rgb(255,0,0)';
@@ -222,8 +228,8 @@ X.Debugger = (function() {
       // Draw the corresponding tile
       var tile_number = X.Memory.r(index + 2);
       var tile = background_canvas.createImageData(8, 8);
-      X.Utils.cache_to_image(X.Video.cached_tiles[tile_number], tile.data);
-      object[0].getContext('2d').putImageData(tile, 0, 0);
+      //X.Utils.cache_to_image(X.Video.cached_tiles[tile_number], X.Video.cached_obj_colors_0, tile.data);
+      //object[0].getContext('2d').putImageData(tile, 0, 0);
 
       // Update the info
       object[1].textContent = X.Utils.hex8(X.Memory.r(index));
@@ -282,7 +288,7 @@ X.Debugger = (function() {
     log_instruction: function(opcode) {
 
       //this.log(X.CPU.PC.toString(16)); return;
-      
+
       var address = X.CPU.PC;
       var bytes = parseInt(X.InstructionImplementations.opcodes[opcode][1]);
       var instruction = X.Memory.r_(address, bytes).map(function(x){ return x.toString(16) });

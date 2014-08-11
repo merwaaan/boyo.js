@@ -4,9 +4,9 @@ CPU
 - cycles wrt interrupts
 
 VIDEO
-- different palettes
 - window support
 - STAT interrupts
+- webGL
 
 AUDIO
 - sound support...

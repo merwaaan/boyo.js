@@ -62,16 +62,16 @@ X.Utils = (function() {
 
     },
 
-    cache_to_image: function(cache, image) {
+    cache_to_image: function(cache, palette, image) {
 
       for (var y = 0; y < 8; ++y)
         for (var x = 0; x < 8; ++x) {
-          var color = X.Video.cached_bg_colors[cache[y*8 + x]];
+          var color = palette[cache[y*8 + x]];
           var index = y*8*4 + x*4;
           image[index] = color[0];
           image[index + 1] = color[1];
           image[index + 2] = color[2];
-          image[index + 3] = 255;
+          image[index + 3] = color[3];
         }
     },
 
