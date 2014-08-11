@@ -268,7 +268,7 @@ X.Debugger = (function() {
     logs: [],
     log: function() {
 
-      if (false)// && X.CPU.PC > 0x100)
+      if (false)
         console.log(Array.prototype.slice.call(arguments).join('       '));
       else {
         this.logs.push(Array.prototype.slice.call(arguments).join('       '));
@@ -281,8 +281,8 @@ X.Debugger = (function() {
 
     log_instruction: function(opcode) {
 
-      this.log(X.CPU.PC.toString(16));
-      return;
+      //this.log(X.CPU.PC.toString(16)); return;
+      
       var address = X.CPU.PC;
       var bytes = parseInt(X.InstructionImplementations.opcodes[opcode][1]);
       var instruction = X.Memory.r_(address, bytes).map(function(x){ return x.toString(16) });

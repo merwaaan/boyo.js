@@ -79,15 +79,17 @@ X.CPU = (function() {
 
     check_interrupts: function() {
 
-      // Interrupt requests terminate HALT
-      if (this.interrupt_request > 0) {
-        this.halted = false;
-      }
+      var interrupts = this.interrupt_request & this.interrupt_enable;
+      if (interrupts == 0)
+        return;
 
-      // Execute interrupts if appropriate
-      if (this.interrupt_master_enable && this.interrupt_request & this.interrupt_enable > 0)
+      // Interrupts terminate HALT
+      this.halted = false; // TODO ime effect?? (prog manual p22)
+      
+      // Execute interrupts if enabled
+      if (this.interrupt_master_enable)
         for (var b = 0; b < 5; ++b)
-          if (X.Utils.bit(this.interrupt_request, b) && X.Utils.bit(this.interrupt_enable, b))
+          if (X.Utils.bit(interrupts, b))
             this.do_interrupt(b);
     },
 
@@ -143,14 +145,15 @@ X.CPU = (function() {
 
     reset: function() {
 
-      this.PC = 0;
+      this.PC = 0; // TODO propose choice
       this.halted = false;
       this.stopped = false;
     },
 
     step: function() {
       
-      var cycles = 0;
+      var cycles = 1; // TODO check cycles on HALT/STOP
+      // TODO handle timer & PPU without CPU
 
       if (!this.halted && !this.stopped) {
       
@@ -170,10 +173,11 @@ X.CPU = (function() {
         this.PC = X.Utils.wrap16(this.PC + bytes);
         instruction(operands);
 
-        // Update timers
-
-        this.update_timers(cycles);
+        //X.Debugger.log_instruction(opcode);
       }
+
+      // Update timers
+      this.update_timers(cycles); // TODO should not update on STOP??
 
       // Check for interrupts
       this.check_interrupts();

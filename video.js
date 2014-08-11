@@ -302,7 +302,7 @@ X.Video = (function() {
           break;
       }
 
-	    // Check line coincidence
+	    // Check line coincidence TODO move on line start
 	    if (this.line_y == this.line_y_compare) {
 	    	//this.line_y_coincidence = true;
 	    }
