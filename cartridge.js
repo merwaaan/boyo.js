@@ -6,9 +6,18 @@ X.Cartridge = (function() {
 
 	var data = [];
 
+  var mbc_names = {
+    None: [0x0, 0x8, 0x9],
+    MBC1: [0x1, 0x2, 0x3],
+    MBC2: [0x5, 0x6],
+    MBC3: [0xF, 0x10, 0x11, 0x13],
+    MBC4: [0x15, 0x16, 0x17],
+    MBC5: [0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E]
+  };
+
   var MemoryBankControllers = {
     
-    0x0: { // None
+    None: {
       r: function(address) {
         return data[address];
       },
@@ -17,7 +26,7 @@ X.Cartridge = (function() {
       }
     },
 
-    0x1: { // MBC1
+    MBC1: {
       rom_bank: 0,
       ram_bank: 0,
       mode: 0, // 0 -> ROM banking, 1 -> RAM banking
@@ -41,7 +50,7 @@ X.Cartridge = (function() {
           this.rom_bank = (this.rom_bank & 0x60) | (value & 0x1F);
         }
         else if (address < 0x6000) {
-          if (mode == 0)
+          if (this.mode == 0)
             this.rom_bank = (this.rom_bank & 0x1F) | (value & 0x3) << 5;
           else
             this.ram_bank = value & 0x3;
@@ -71,7 +80,12 @@ X.Cartridge = (function() {
 
       data = bytes;
 
-      this.mbc = MemoryBankControllers[this.type];
+      _.each(mbc_names, function(codes, type) {
+        if (_.contains(codes, this.type)) {
+          this.mbc = MemoryBankControllers[type];
+          return;
+        }
+      }.bind(this));
   	},
 
   	r: function(address) {

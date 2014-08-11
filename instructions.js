@@ -285,7 +285,7 @@ X.InstructionImplementations = (function() {
     
     'HALT': function(parameters, parameter_names) {
       return function(operands) {
-        console.log('HALT');
+        //console.log('HALT');
         X.CPU.halted = true;
       };
     },

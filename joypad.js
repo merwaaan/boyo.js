@@ -34,6 +34,7 @@ X.Joypad = (function() {
           keys[event.keyCode] = true;
           X.CPU.request_interrupt(4);
           X.CPU.stopped = false; // Button presses terminate STOP
+          event.preventDefault();
         }
       });
 

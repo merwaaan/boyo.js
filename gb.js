@@ -27,7 +27,8 @@ X.GB = (function() {
       // Reset the console when a new game is inserted
       
       var gb = this;
-      document.querySelector('input#rom').addEventListener('change', function() {
+
+      document.querySelector('input#local_rom').addEventListener('change', function() {
         
         var reader = new FileReader();
         reader.addEventListener('load', function() {
@@ -42,6 +43,23 @@ X.GB = (function() {
 
         reader.readAsBinaryString(this.files[0]);
       });
+
+      document.querySelector('select#hosted_rom').addEventListener('change', function(event) {
+        
+        var name = event.target.selectedOptions[0].textContent;
+
+        var request = new XMLHttpRequest();
+        request.open('GET', 'roms/' + name + '.gb', true);
+        request.responseType = 'arraybuffer';
+
+        request.onload = function() {
+          gb.reset();
+          X.Cartridge.init(new Uint8Array(request.response));
+        };
+
+        request.send(null);
+      });
+
     },
 
     reset: function() {
@@ -56,7 +74,7 @@ X.GB = (function() {
 
     frame: function() {
 
-      // Emulate until a V-Blank or a breakpoint occurs
+      // Emulate until a V-Blank, a HALT, a STOP or a breakpoint
       do {
 
         if (X.Debugger.reached_breakpoint()) {
@@ -65,7 +83,9 @@ X.GB = (function() {
           return;  
         }
 
-      } while (!X.Video.step(X.CPU.step()));
+        var cycles = X.CPU.step();
+
+      } while (cycles > 0 && !X.Video.step(cycles));
 
       // Repeat...
       if (!paused) {

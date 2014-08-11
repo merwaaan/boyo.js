@@ -143,12 +143,15 @@ X.CPU = (function() {
 
     reset: function() {
 
-      // The only certainty is that the PC is at 0 on reset
       this.PC = 0;
+      this.halted = false;
+      this.stopped = false;
     },
 
     step: function() {
       
+      var cycles = 0;
+
       if (!this.halted && !this.stopped) {
       
         // Fetch
@@ -158,7 +161,7 @@ X.CPU = (function() {
 
         var instruction = this.instructions[opcode];
         var bytes = X.InstructionImplementations.opcodes[opcode][1];
-        var cycles = X.InstructionImplementations.opcodes[opcode][2]; // TODO handle X/Y cycles
+        cycles = X.InstructionImplementations.opcodes[opcode][2]; // TODO handle X/Y cycles
 
         var operands = X.Memory.r_(this.PC + 1, bytes);
 

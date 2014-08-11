@@ -32,11 +32,45 @@
       <tr>
         <td>
           <p>Choose one of the available games</p>
-          <select name="games">
-            <option></option>
-            <option>1</option>
-            <option>2</option>
-            <option>3</option>
+          <select id="hosted_rom">
+            <optgroup label="Licensed games (TO BE REMOVED!!!)">
+              <option>Tetris</option>
+              <option>Alleyway</option>
+              <option>Super Mario Land</option>
+              <option>Super Mario Land 2 - 6 Golden Coins</option>
+              <option>Kirby's Dream Land</option>
+              <option>Link's Awakening</option>
+              <option>Pokemon Blue</option>
+              <option>Duck Tales</option>
+              <option>Motocross Maniacs</option>
+              <option>Prince of Persia</option>
+              <option>Double Dragon</option>
+              <option>Mega Man II</option>
+            </optgroup>
+            <optgroup label="Homebrew games">
+              <option>Espionage - Fredrik Brundin</option>
+              <option>Adjustris - </option>
+            </optgroup>
+            <optgroup label="Demos">
+              <option>gejmbåj - Snorpung</option>
+              <option>oh! - Snorpung</option>
+              <option>20y - Snorpung</option>
+              <option>demon blood - Youth Uprising</option>
+            </optgroup>
+            <optgroup label="Chiptune">
+              <option>Music Tech - PIXELH8</option>
+              <option>Little Sound Dj (demo) - ?</option>
+            </optgroup>
+            <optgroup label="Blargg's tests">
+              <option>cpu_instrs</option>
+              <option>dmg_sound</option>
+              <option>dmg_sound-2</option>
+              <option>instr_timing</option>
+              <option>mem_timing</option>
+              <option>mem_timing-2</option>
+              <option>oam_bug</option>
+              <option>oam_bug-2</option>
+            </optgroup>
           </select>
         </td>
         <td>
@@ -44,7 +78,7 @@
         </td>
         <td>
           <p>Open your own ROM</p>
-          <input type="file" id="rom"/>
+          <input type="file" id="local_rom"/>
         </td>
       </tr>
     </table>

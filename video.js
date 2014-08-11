@@ -247,6 +247,7 @@ X.Video = (function() {
       // TODO flip
       // TODO depth priority
       // TODO window
+      // TODO bg wrapping
 
       this.line_y = 0x90; // TODO really necessary?
     },
