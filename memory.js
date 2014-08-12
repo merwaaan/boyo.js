@@ -4,6 +4,7 @@ X.Memory = (function() {
 
 	'use strict';
 
+  // TODO use Uint8ClampedArray instead to avoid manual wrapping
 	var data = new Array(0x10000);
   X.Utils.fill(data);
 

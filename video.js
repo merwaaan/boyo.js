@@ -292,6 +292,8 @@ X.Renderer = (function() {
 
   // Shaders
 
+  // XXX palette in shader, good or bad idea?
+
   var vertex_shader = '\
     attribute vec4 a_color;\
     varying vec4 v_color;\
@@ -399,38 +401,7 @@ X.Renderer = (function() {
       }
     },
 
-    scan_pixel: function(layer, x, y, color) {
-
-      bg_colors.value[y*256 + x] = color;
-      bg_colors.needsUpdate = true;
-    },
-
-    draw_frame: function(destination_canvas) {
-
-      this.draw_background(destination_canvas, true);
-      this.draw_obj(destination_canvas);
-    },
-
-    draw_background: function(destination_canvas, scrolling, wrapping) {
-
-      renderer.render(scene, camera); // XXX Where should I do that?!
-return;
-      var sx = scrolling ? X.Video.scroll_x : 0;
-      var sy = scrolling ? X.Video.scroll_y : 0;
-
-      destination_canvas.drawImage(canvas, sx, sy, 160, 144, 0, 0, 160, 144);
-    },
-
-    draw_obj: function(destination_canvas) {
-
-    }
-
-  };
-
-})();
-
-/*
-    frame_obj: function(canvas) {
+    scan_obj: function(canvas) {
 
       for (var o = 0; o < 40; ++o) {
 
@@ -460,5 +431,34 @@ return;
 
       canvas.bufferData(canvas.ARRAY_BUFFER, obj_buffer, canvas.STATIC_DRAW);
       canvas.drawArrays(canvas.TRIANGLES, 0, 160*144*6);
+    },
+
+    scan_pixel: function(layer, x, y, color) {
+
+      bg_colors.value[y*256 + x] = color;
+      bg_colors.needsUpdate = true;
+    },
+
+    draw_frame: function(destination_canvas) {
+
+      this.draw_background(destination_canvas, true);
+      this.draw_obj(destination_canvas);
+    },
+
+    draw_background: function(destination_canvas, scrolling, wrapping) {
+
+      renderer.render(scene, camera); // XXX Where should I do that?!
+return;
+      var sx = scrolling ? X.Video.scroll_x : 0;
+      var sy = scrolling ? X.Video.scroll_y : 0;
+
+      destination_canvas.drawImage(canvas, sx, sy, 160, 144, 0, 0, 160, 144);
+    },
+
+    draw_obj: function(destination_canvas) {
+
     }
-*/
+
+  };
+
+})();

@@ -6,8 +6,9 @@ X.GB = (function() {
 
   var paused = false;
 
+  var stats;
+
   return {
-  
 
     init: function() {
   
@@ -60,6 +61,15 @@ X.GB = (function() {
         request.send(null);
       });
 
+      // FPS counter
+
+      stats = new Stats();
+      stats.setMode(0);
+
+      stats.domElement.style.position = 'absolute';
+      stats.domElement.style.top = '0';
+      stats.domElement.style.right = '0';
+      document.body.appendChild(stats.domElement);
     },
 
     reset: function() {
@@ -74,6 +84,8 @@ X.GB = (function() {
 
     frame: function() {
 
+      stats.begin();
+
       // Emulate until a V-Blank, a HALT, a STOP or a breakpoint
       do {
 
@@ -84,9 +96,12 @@ X.GB = (function() {
         }
 
         var cycles = X.CPU.step();
+        var vblank = X.Video.step(cycles);
 
-      } while (cycles > 0 && !X.Video.step(cycles));
+      } while (!vblank && cycles > 0);
 
+      stats.end();
+      
       // Repeat...
       if (!paused) {
         requestAnimationFrame(this.frame.bind(this));
