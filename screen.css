@@ -22,6 +22,10 @@ section#game {
 	text-align: center;
 }
 
+section#game canvas {
+	background-color: white;
+}
+
 section#game table {
 	margin: auto;
 	border-spacing: 2em;
@@ -40,7 +44,7 @@ section#debugger table td {
 	border: 1px solid black;
 }
 
-section#debugger section#buttons button {
+section#buttons button {
 	width: 4em;
 }
 
@@ -54,7 +58,17 @@ section#flags label:after {
 	white-space: pre;
 }
 
-section#video canvas, section#video table#oam {
+section#video span {
+	position: relative;
+}
+
+section#video span canvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+};
+
+section#video canvas#tiles, section#video canvas#background, section#video table#oam {
 	display: inline-block;
 	vertical-align: top;
 }

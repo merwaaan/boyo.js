@@ -15,17 +15,9 @@ X.Utils = (function() {
   	bit: function(value, n) {
   		return !!(value & 1 << n);
   	},
-  	
-    sign: function(value) {
-      return Utils.bit(value, 7);
-    },
     
-  	is_negative: function(value) {
-  		return !!Utils.sign(value);
-  	},
-    
-    signed: function(value) {  
-      return this.bit(value, 7) * -128 + (value & ~(1 << 7));
+    signed: function(value) {
+      return value < 0x80 ? value : value - 0xFF;
     },
     
   	wrap8: function(value) {
@@ -67,11 +59,11 @@ X.Utils = (function() {
       for (var y = 0; y < 8; ++y)
         for (var x = 0; x < 8; ++x) {
           var color = palette[cache[y*8 + x]];
-          var index = y*8*4 + x*4;
-          image[index] = color[0];
-          image[index + 1] = color[1];
-          image[index + 2] = color[2];
-          image[index + 3] = color[3];
+          var index = (y*8 + x) * 4;
+          image[index] = color[0] * 255;
+          image[index + 1] = color[1] * 255;
+          image[index + 2] = color[2] * 255;
+          image[index + 3] = 255;
         }
     },
 

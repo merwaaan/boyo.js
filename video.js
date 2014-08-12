@@ -5,20 +5,14 @@ X.Video = (function() {
   'use strict';
 
   var canvas;
-  var buffer;
 
   var colors = [
-    [0xFF, 0xFF, 0xFF, 0xFF],
-    [0xAA, 0xAA, 0xAA, 0xFF],
-    [0x66, 0x66, 0x66, 0xFF],
-    [0x00, 0x00, 0x00, 0xFF]
-  ];
-  colors = [
     [1, 1, 1, 1],
     [0.7, 0.7, 0.7, 1],
     [0.4, 0.4, 0.4, 1],
     [0, 0, 0, 1]
   ];
+
   var color_transparent = [0, 0, 0, 0];
 
   var background_maps;
@@ -72,6 +66,7 @@ X.Video = (function() {
   	cached_bg_colors: [0, 0, 0, 0],
   	cached_obj_colors_0: [0, 0, 0, 0],
   	cached_obj_colors_1: [0, 0, 0, 0],
+    test_palette: [colors[0], colors[1], colors[2], colors[3]],
 
   	/**
   		* Memory mapping
@@ -149,11 +144,13 @@ X.Video = (function() {
 
     init: function() {
 
+      X.Renderer.init();
+
+      canvas = document.querySelector('section#game canvas').getContext('2d');
+
 			background_maps = new Array(2048);
 		  tile_data = new Array(6144);
 		  oam = new Array(160);
-
-      X.Renderer.init();
 
 		  X.Utils.fill(background_maps);
 		  X.Utils.fill(tile_data);
@@ -173,8 +170,8 @@ X.Video = (function() {
       	X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
 	      	for (var b = 0; b < 4; ++b)
 						palette[b] = colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
-          if (index > 0)
-            palette[0] = color_transparent;
+          /*if (index > 0)
+            palette[0] = color_transparent;*/
     		});
       });
     },
@@ -190,123 +187,42 @@ X.Video = (function() {
     	this.mode = 2; // Really necessary??
     },
 
-    draw_pixels: function() {
+    line_x: 0,
 
-    	if (!this.display_enable)
-    		return;
+    scan: function(cycles) {
 
-      canvas.clear(canvas.COLOR_BUFFER_BIT | canvas.DEPTH_BUFFER_BIT);
+      if (!this.display_enable)
+        return;
 
-      if (this.bg_enable) {
+      /*
+      var line_cycles = this.mode == 2 ? this.mode_cycles : this.mode_durations[2] + this.mode_cycles;
+      var line_x_now = Math.floor(line_cycles / (this.mode_durations[2] + this.mode_durations[3]) * 160);
+      var scan_length = line_x_now - this.line_x;
+      */
 
-        for (var dy = 0; dy <= 18; ++dy) {
-          for (var dx = 0; dx <= 20; ++dx) {
+      // Background
 
-            var tx = dx;
-            var ty = dy;
+      if (this.bg_enable)
+        X.Renderer.scan_background(0, this.line_y, 256);
 
-            var tile_number = X.Memory.r(this.bg_tile_map + ty*32 + tx);
-            tile_number = this.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
-            var tile = this.cached_tiles[tile_number];
+      // Window
+      
+      if (this.window_enable) {
 
-
-            for (var y = 0; y < 8; ++y) {
-              for (var x = 0; x < 8; ++x) {
-
-                var px = dx*8 + x;
-                var py = dy*8 + y;
-
-                var index = py*160*6*6 + px*6*6;
-
-                var c = this.cached_bg_colors[tile[y*8 + x]];
-                var r = c[0];
-                var g = c[1];
-                var b = c[2];
-                var a = c[3]; 
-
-                buffer[index] = px; buffer[index + 1] = py; buffer[index + 2] = r; buffer[index + 3] = g; buffer[index + 4] = b; buffer[index + 5] = a;
-                buffer[index + 6] = px+1; buffer[index + 7] = py; buffer[index + 8] = r; buffer[index + 9] = g; buffer[index + 10] = b; buffer[index + 11] = a;
-                buffer[index + 12] = px+1; buffer[index + 13] = py+1; buffer[index + 14] = r; buffer[index + 15] = g; buffer[index + 16] = b; buffer[index + 17] = a;
-                buffer[index + 18] = px; buffer[index + 19] = py+1; buffer[index + 20] = r; buffer[index + 21] = g; buffer[index + 22] = b; buffer[index + 23] = a;
-                buffer[index + 24] = px+1; buffer[index + 25] = py+1; buffer[index + 26] = r; buffer[index + 27] = g; buffer[index + 28] = b; buffer[index + 29] = a;
-                buffer[index + 30] = px; buffer[index + 31] = py; buffer[index + 32] = r; buffer[index + 33] = g; buffer[index + 34] = b; buffer[index + 35] = a;
-              }
-            }
-          }
-        }
-
-        canvas.bufferData(canvas.ARRAY_BUFFER, buffer, canvas.STATIC_DRAW);
-        canvas.drawArrays(canvas.TRIANGLES, 0, buffer.length/6);
       }
 
-      /*canvas.clearRect(0, 0, 160, 144);
-      
-    	// Background
-
-    	if (this.bg_enable) {
-
-	    	var x0 = Math.floor(this.scroll_x / 8);
-	      var y0 = Math.floor(this.scroll_y / 8);
-
-				var ox = this.scroll_x % 8;
-	      var oy = this.scroll_y % 8;
-	          
-				for (var dy = 0; dy <= 18; ++dy)
-	        for (var dx = 0; dx <= 20; ++dx) {
-
-	          var tx = x0 + dx;
-	          var ty = y0 + dy;
-
-	          var tile_number = X.Memory.r(this.bg_tile_map + ty*32 + tx);
-	          tile_number = this.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
-	          
-	          /*var tile = canvas.createImageData(8, 8);
-		        X.Utils.cache_to_image(this.cached_tiles[tile_number], this.cached_bg_colors, tile.data);
-		        //canvas.putImageData(tile, dx*8-ox, dy*8-oy);
-var c = document.createElement('canvas');
-          c.width = c.height = 8;
-          c.getContext("2d").putImageData(tile, 0, 0);
-          canvas.drawImage(c, dx*8-ox, dy*8-oy);*/
-
-
-//        }
-
-	//		}
-
       // Objects
-/*
+
       if (this.obj_enable) {
-      
-	      for (var o = 0; o < 40; ++o) {
 
-	      	var index = o*4;
-	      	var pos_y = oam[index];
-	      	var pos_x = oam[index + 1];
+      }
 
-	      	// Skip the object if it is hidden off-screen
-	      	if (pos_y == 0 || pos_y >= 160 || pos_x == 0 || pos_x >= 168)
-	      		continue;
+//      this.line_x = line_x_now;
+    },
 
-	      	pos_y -= 16;
-	      	pos_x -= 8;
+    next_frame: function() {
 
-	      	var tile_number = oam[index + 2];
-	      	var attributes = oam[index + 3];
-
-					var tile = canvas.createImageData(8, 8);
-          X.Utils.cache_to_image(this.cached_tiles[tile_number], this.cached_obj_colors_0, tile.data);
-	        var c = document.createElement('canvas');
-          c.width = c.height = 8;
-          c.getContext("2d").putImageData(tile, 0, 0);
-          canvas.drawImage(c, pos_x, pos_y);
-	      }
-			}
-*/
-      // TODO different palettes
-      // TODO flip
-      // TODO depth priority
-      // TODO window
-      // TODO bg wrapping
+      X.Renderer.draw_frame(canvas);
 
       this.line_y = 0x90; // TODO really necessary?
     },
@@ -330,12 +246,13 @@ var c = document.createElement('canvas');
           if (this.mode_cycles > this.mode_durations[0]) {
           	if (this.line_y >= 144) {
 	            this.change_mode(1);
-	            this.draw_frame();
+	            this.next_frame();
       				return vblank();
 	          }
           	else {
 	            this.change_mode(2);
 	            ++this.line_y;
+              this.line_x = 0;
 
               // Check line coincidence
               if (this.line_y == this.line_y_compare) {
@@ -350,6 +267,7 @@ var c = document.createElement('canvas');
           if (this.mode_cycles > this.mode_durations[1]) {
             this.change_mode(2);  
             this.line_y = 0;
+            this.line_x = 0;
           }
           break;
 
@@ -361,6 +279,7 @@ var c = document.createElement('canvas');
 
         case 3: // OAM + VRAM access
           if (this.mode_cycles > this.mode_durations[3]) {
+            this.scan();
             this.change_mode(0);
           }
           break;
@@ -373,99 +292,181 @@ var c = document.createElement('canvas');
 
 
 
-
 X.Renderer = (function() {
 
   'use strict';
 
+  var scene;
+  var camera;
+  var renderer;
   var canvas;
-  var program;
 
-  var bg_buffer;
+  var bg_layer;
+  var bg_colors;
+  var bg_vertices;
 
-  var vertex_shader_string = '\
-    attribute vec2 a_pos;\
-    attribute vec4 a_col;\
-    uniform vec2 u_res;\
-    varying vec4 v_col;\
+  var window_layer;
+  var window_colors;
+  var window_vertices;
+
+  var obj_layer;
+  var obj_colors;
+  var obj_vertices;
+
+  var vertex_shader = '\
+    attribute vec4 a_color;\
+    varying vec4 v_color;\
     void main() {\
-      vec2 p = a_pos / u_res * 2.0 - 1.0;\
-      gl_Position = vec4(p, 0.0, 1.0) * vec4(1, -1, 1, 1);\
-      v_col = a_col;\
+      gl_PointSize = 1.0;\
+      v_color = a_color;\
+      vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);\
+      gl_Position = projectionMatrix * mvPosition;\
     }';
 
-  var fragment_shader_string = '\
-    precision mediump float;\
-    varying vec4 v_col;\
+  var fragment_shader = '\
+    varying vec4 v_color;\
     void main() {\
-      gl_FragColor = v_col;\
+      gl_FragColor = v_color;\
     }';
-      
-  var createProgram = function(gl, vs, fs) {
-
-    var program = gl.createProgram();
-    
-    var vertex_shader = createShader(gl, vs, gl.VERTEX_SHADER);
-    var fragment_shader = createShader(gl, fs, gl.FRAGMENT_SHADER);
-    gl.attachShader(program, vertex_shader);
-    gl.attachShader(program, fragment_shader);
-    
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-      console.log(gl.getProgramInfoLog(program));
-
-    return program;
-  };
-
-  var createShader = function(gl, shader_string, type) {
-
-    var shader = gl.createShader(type);
-    gl.shaderSource(shader, shader_string);
-
-    gl.compileShader(shader);
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-      console.log(gl.getShaderInfoLog(shader));
-
-    return shader;
-  };
 
   return {
 
     init: function() {
 
-      canvas = document.querySelector('section#game canvas').getContext('webgl');
+      // Setup webGL
 
-      program = createProgram(canvas, vertex_shader_string, fragment_shader_string);
-      canvas.useProgram(program);
+      scene = new THREE.Scene();
+      camera = new THREE.OrthographicCamera(0,256,0,256,0,10);
+      renderer = new THREE.WebGLRenderer();
+      renderer.setSize(256, 256);
+      canvas = renderer.domElement;
+      document.querySelector('section#game').appendChild(canvas);
 
-      bg_buffer = new Float32Array(160*144*6*6);
-      
-      var vbo = canvas.createBuffer();
-      canvas.bindBuffer(canvas.ARRAY_BUFFER, vbo);
-      
-      program.pos = canvas.getAttribLocation(program, 'a_pos');
-      canvas.enableVertexAttribArray(program.pos);
-      canvas.vertexAttribPointer(program.pos, 2, canvas.FLOAT, false, 24, 0);
+      // Setup layers
 
-      program.col = canvas.getAttribLocation(program, 'a_col');
-      canvas.enableVertexAttribArray(program.col);
-      canvas.vertexAttribPointer(program.col, 4, canvas.FLOAT, false, 24, 8);
+      scene.add(bg_layer = new THREE.Object3D());
+      scene.add(obj_layer = new THREE.Object3D());
 
-      program.res = canvas.getUniformLocation(program, 'u_res');
-      canvas.uniform2fv(program.res, [160, 144]);
+      //
 
-      canvas.clearColor(1, 1, 1, 1);
+      var attributes = {
+        a_color: {type: 'c', value: []}
+      };
+      bg_colors = attributes.a_color;
+
+      var material = new THREE.ShaderMaterial({
+        attributes: attributes,
+        vertexShader: vertex_shader,
+        fragmentShader: fragment_shader // TODO depth test necessary?
+      });
+
+      var geometry = new THREE.Geometry();
+      for (var y = 0; y < 256; ++y) {
+        for (var x = 0; x < 256; ++x) {
+
+          var pixel = new THREE.Vector3(x, y, 0);
+          geometry.vertices.push(pixel);
+
+          bg_colors.value.push(new THREE.Color(1, 1, 1));
+        }
+      }
+
+      var pixels = new THREE.PointCloud(geometry, material);
+      bg_layer.add(pixels);
     },
 
     reset: function() {
 
-      // ...
     },
 
-    draw: function() {
+    scan_background: function(x, y, length) {
+
+      for (var p = 0; p < length; ++p) {
+        
+        var ox = x + p;
+
+        // Fetch the tile
+
+        var tx = Math.floor(ox/8);
+        var ty = Math.floor(y/8);
+
+        var tile_number = X.Memory.r(X.Video.bg_tile_map + ty*32 + tx);
+        var tile_index = X.Video.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
+
+        var tile = X.Video.cached_tiles[tile_index];
+        
+        // Fetch the pixel color
+
+        var px = ox % 8;
+        var py = y % 8;
+        var color = X.Video.cached_bg_colors[tile[py*8 + px]];
+
+        // Draw the pixel
+
+        this.scan_pixel(bg_layer, ox, y, color);
+      }
+    },
+
+    scan_pixel: function(layer, x, y, color) {
+
+      bg_colors.value[y*256 + x] = new THREE.Color(color[0], color[1], color[2]);
+      bg_colors.needsUpdate = true;
+    },
+
+    draw_frame: function(destination_canvas) {
+
+      this.draw_background(destination_canvas, true);
+      this.draw_obj(destination_canvas);
+    },
+
+    draw_background: function(destination_canvas, scrolling, wrapping) {
+
+      renderer.render(scene, camera); // Where should I do that?!
+return;
+      var sx = scrolling ? X.Video.scroll_x : 0;
+      var sy = scrolling ? X.Video.scroll_y : 0;
+
+      destination_canvas.drawImage(canvas, sx, sy, 160, 144, 0, 0, 160, 144);
+    },
+
+    draw_obj: function(destination_canvas) {
 
     }
 
   };
 
 })();
+
+/*
+    frame_obj: function(canvas) {
+
+      for (var o = 0; o < 40; ++o) {
+
+        var index = o*4;
+        var pos_y = X.Memory.r(0xFE00 + index);
+        var pos_x = X.Memory.r(0xFE00 + index + 1);
+
+        // Skip the object if it is hidden off-screen
+        if (pos_y == 0 || pos_y >= 160 || pos_x == 0 || pos_x >= 168)
+          continue;
+
+        pos_y -= 16;
+        pos_x -= 8;
+
+        var tile_number = X.Memory.r(0xFE00 + index + 2);
+        var attributes = X.Memory.r(0xFE00 + index + 3);
+
+        var tile = X.Video.cached_tiles[tile_number];
+
+        for (var y = 0; y < 8; ++y) {
+          for (var x = 0; x < 8; ++x) {
+            var color = X.Video.cached_bg_colors[tile[y*8 + x]];
+            this.draw_pixel(obj_buffer, pos_x + x, pos_y + y, color);            
+          }
+        }
+      }
+
+      canvas.bufferData(canvas.ARRAY_BUFFER, obj_buffer, canvas.STATIC_DRAW);
+      canvas.drawArrays(canvas.TRIANGLES, 0, 160*144*6);
+    }
+*/

@@ -153,17 +153,22 @@ X.Debugger = (function() {
 
   var update_tiles = function() {
 
-    for (var y = 0; y < 24; ++y)
+    var image = tiles_canvas.createImageData(8, 8);
+
+    for (var y = 0; y < 24; ++y) {
       for (var x = 0; x < 16; ++x) {
-        var tile = tiles_canvas.createImageData(8, 8);
-        //X.Utils.cache_to_image(X.Video.cached_tiles[y*16 + x], X.Video.cached_obj_colors_0, tile.data);
-        //tiles_canvas.putImageData(tile, x*8, y*8);
+        var tile = X.Video.cached_tiles[y*16 + x];
+        X.Utils.cache_to_image(tile, X.Video.test_palette, image.data);
+        tiles_canvas.putImageData(image, x*8, y*8);
       }
+    }
   };
 
   var init_background = function() {
 
     background_canvas = document.querySelector('section#debugger canvas#background').getContext('2d');
+    background_canvas.strokeStyle = '#FF0000';
+
     update_background();
   };
 
@@ -171,23 +176,10 @@ X.Debugger = (function() {
 
     background_canvas.clearRect(0, 0, 256, 256);
 
-    for (var y = 0; y < 32; ++y)
-      for (var x = 0; x < 32; ++x) {
+    // Draw background
+    X.Renderer.draw_background(background_canvas);
 
-        var tile_number = X.Memory.r(X.Video.bg_tile_map + y*32 + x);
-        var as = tile_number;
-        tile_number = X.Video.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
-
-        var tile = background_canvas.createImageData(8, 8);
-        X.Utils.cache_to_image(X.Video.cached_tiles[tile_number], X.Video.cached_bg_colors, tile.data);
-        //background_canvas.putImageData(tile, x*8, y*8);
-        var c = document.createElement('canvas');
-          c.width = c.height = 8;
-          c.getContext("2d").putImageData(tile, 0, 0);
-          background_canvas.drawImage(c, x*8, y*8);
-      }
-
-    background_canvas.strokeStyle = 'rgb(255,0,0)';
+    // Draw scrolling frame
     background_canvas.strokeRect(X.Video.scroll_x, X.Video.scroll_y, 160, 144);
   };
 
@@ -227,7 +219,7 @@ X.Debugger = (function() {
 
       // Draw the corresponding tile
       var tile_number = X.Memory.r(index + 2);
-      var tile = background_canvas.createImageData(8, 8);
+      var tile = tiles_canvas.createImageData(8, 8);
       //X.Utils.cache_to_image(X.Video.cached_tiles[tile_number], X.Video.cached_obj_colors_0, tile.data);
       //object[0].getContext('2d').putImageData(tile, 0, 0);
 
