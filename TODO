@@ -6,7 +6,7 @@ CPU
 VIDEO
 - window support
 - STAT interrupts
-- webGL
+- webGL transparency
 - bg wrapping
 - sprite flip
 - sprite priority

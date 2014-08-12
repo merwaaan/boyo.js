@@ -272,28 +272,20 @@ X.Renderer = (function() {
 
   // Layers
 
-  var bg_layer;
-  var bg_colors;
-  var bg_vertices;
-
-  var window_layer;
-  var window_colors;
-  var window_vertices;
-
-  var obj_layer;
-  var obj_colors;
-  var obj_vertices;
+  var bg_layer = { width: 256, height: 256, depth: -1 };
+  var obj_layer = { width: 160, height: 144, depth: 0 };
 
   // Cached palettes:
 
-  var cached_bg_palette = [];
-  var cached_obj_palette_0 = [];
-  var cached_obj_palette_1 = [];
+  var cached_palettes = {
+    bg: [],
+    obj_0: [],
+    obj_1: []
+  };
 
   // Shaders
 
   // XXX palette in shader, good or bad idea?
-
   var vertex_shader = '\
     attribute vec4 a_color;\
     varying vec4 v_color;\
@@ -318,56 +310,67 @@ X.Renderer = (function() {
 
       scene = new THREE.Scene();
       camera = new THREE.OrthographicCamera(0,256,0,256,0,10);
-      renderer = new THREE.WebGLRenderer();
+      renderer = new THREE.WebGLRenderer({alpha: true});
       renderer.setSize(256, 256);
       canvas = renderer.domElement;
       document.querySelector('section#game').appendChild(canvas);
 
       // Setup layers
 
-      scene.add(bg_layer = new THREE.Object3D());
-      scene.add(obj_layer = new THREE.Object3D());
-
-      //
-
-      var attributes = {
-        a_color: {type: 'c', value: []}
-      };
-      bg_colors = attributes.a_color;
-
-      var material = new THREE.ShaderMaterial({
-        attributes: attributes,
-        vertexShader: vertex_shader,
-        fragmentShader: fragment_shader // TODO depth test necessary?
-      });
-
-      var geometry = new THREE.Geometry();
-      for (var y = 0; y < 256; ++y) {
-        for (var x = 0; x < 256; ++x) {
-
-          var pixel = new THREE.Vector3(x, y, 0);
-          geometry.vertices.push(pixel);
-
-          bg_colors.value.push(new THREE.Color(1, 1, 1));
-        }
-      }
-
-      var pixels = new THREE.PointCloud(geometry, material);
-      bg_layer.add(pixels);
-
+      this.init_layer(bg_layer);
+      this.init_layer(obj_layer);
 
       // Maintain cached palettes for faster access
 
-      var palettes = [cached_bg_palette, cached_obj_palette_0, cached_obj_palette_1];
+      var palettes = ['bg', 'obj_0', 'obj_1'];
       
       _.each(palettes, function(palette, index) {
         X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
           for (var b = 0; b < 4; ++b) {
             var color = X.Video.colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
-            palette[b] = new THREE.Color(color[0], color[1], color[2]);
+            cached_palettes[palette][b] = new THREE.Color(color[0], color[1], color[2]);
           }
         });
       });
+    },
+
+    init_layer: function(layer) {
+
+      // Add a container to hold the vertices
+
+      layer.container = new THREE.Object3D()
+      scene.add(layer.container);
+      
+      // Setup the material
+
+      var attributes = {
+        a_color: {type: 'c', value: []}
+      };
+      layer.colors = attributes.a_color;
+
+      var material = new THREE.ShaderMaterial({
+        attributes: attributes,
+        vertexShader: vertex_shader,
+        fragmentShader: fragment_shader // XXX depth test necessary?
+      });
+
+      // One vertex per pixel
+
+      var geometry = new THREE.Geometry();
+      var color = new THREE.Color(1, 1, 1);
+
+      for (var y = 0; y < layer.height; ++y) {
+        for (var x = 0; x < layer.width; ++x) {
+
+          var pixel = new THREE.Vector3(x, y, layer.depth);
+          geometry.vertices.push(pixel);
+
+          layer.colors.value.push(color);
+        }
+      }
+
+      var pixels = new THREE.PointCloud(geometry, material);
+      layer.container.add(pixels);
     },
 
     reset: function() {
@@ -393,7 +396,7 @@ X.Renderer = (function() {
         // Fetch the pixel color
 
         var px = x % 8;
-        var color = cached_bg_palette[tile[py*8 + px]];
+        var color = cached_palettes.bg[tile[py*8 + px]];
 
         // Draw the pixel
 
@@ -401,54 +404,58 @@ X.Renderer = (function() {
       }
     },
 
-    scan_obj: function(canvas) {
+    scan_obj: function() {
 
       for (var o = 0; o < 40; ++o) {
 
-        var index = o*4;
-        var pos_y = X.Memory.r(0xFE00 + index);
-        var pos_x = X.Memory.r(0xFE00 + index + 1);
+        var address = 0xFE00 + o*4;
+        var pos_y = X.Memory.r(address);
+        var pos_x = X.Memory.r(address + 1);
 
-        // Skip the object if it is hidden off-screen
+        // Skip the object if it is off-screen
         if (pos_y == 0 || pos_y >= 160 || pos_x == 0 || pos_x >= 168)
           continue;
 
         pos_y -= 16;
         pos_x -= 8;
 
-        var tile_number = X.Memory.r(0xFE00 + index + 2);
-        var attributes = X.Memory.r(0xFE00 + index + 3);
-
+        var tile_number = X.Memory.r(address + 2);
         var tile = X.Video.cached_tiles[tile_number];
+
+        var attributes = X.Memory.r(address + 3);
+        var obj_above = X.Utils.bit(attributes, 7);
+        var flip_y = X.Utils.bit(attributes, 6);
+        var flip_x = X.Utils.bit(attributes, 5);
+        var palette = X.Utils.bit(attributes, 4) ? cached_palettes.obj_1 : cached_palettes.obj_0;
 
         for (var y = 0; y < 8; ++y) {
           for (var x = 0; x < 8; ++x) {
-            var color = X.Video.cached_bg_colors[tile[y*8 + x]];
-            this.draw_pixel(obj_buffer, pos_x + x, pos_y + y, color);            
+            var color = palette[tile[y*8 + x]];
+            this.scan_pixel(obj_layer, pos_x + x, pos_y + y, color);    
           }
         }
       }
-
-      canvas.bufferData(canvas.ARRAY_BUFFER, obj_buffer, canvas.STATIC_DRAW);
-      canvas.drawArrays(canvas.TRIANGLES, 0, 160*144*6);
     },
 
     scan_pixel: function(layer, x, y, color) {
 
-      bg_colors.value[y*256 + x] = color;
-      bg_colors.needsUpdate = true;
+      layer.colors.value[y*layer.width + x] = color;
+      layer.colors.needsUpdate = true;
     },
 
     draw_frame: function(destination_canvas) {
 
-      this.draw_background(destination_canvas, true);
-      this.draw_obj(destination_canvas);
+      this.scan_obj(); // TODO sync with scanlining
+
+      obj_layer.container.position.x = 100;
+      renderer.render(scene, camera);
+
+      //this.draw_background(destination_canvas, true);
+      //this.draw_obj(destination_canvas);
     },
 
     draw_background: function(destination_canvas, scrolling, wrapping) {
 
-      renderer.render(scene, camera); // XXX Where should I do that?!
-return;
       var sx = scrolling ? X.Video.scroll_x : 0;
       var sy = scrolling ? X.Video.scroll_y : 0;
 
@@ -457,6 +464,7 @@ return;
 
     draw_obj: function(destination_canvas) {
 
+      // TODO
     }
 
   };
