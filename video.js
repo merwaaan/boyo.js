@@ -6,15 +6,6 @@ X.Video = (function() {
 
   var canvas;
 
-  var colors = [
-    [1, 1, 1, 1],
-    [0.7, 0.7, 0.7, 1],
-    [0.4, 0.4, 0.4, 1],
-    [0, 0, 0, 1]
-  ];
-
-  var color_transparent = [0, 0, 0, 0];
-
   var background_maps;
   var tile_data;
   var oam;
@@ -62,11 +53,13 @@ X.Video = (function() {
   	get bg_palette() { return X.Memory.r(0xFF47); },
     get obj_palette_0() { return X.Memory.r(0xFF48); },
     get obj_palette_1() { return X.Memory.r(0xFF49); },
-  	
-  	cached_bg_colors: [0, 0, 0, 0],
-  	cached_obj_colors_0: [0, 0, 0, 0],
-  	cached_obj_colors_1: [0, 0, 0, 0],
-    test_palette: [colors[0], colors[1], colors[2], colors[3]],
+
+    colors: [
+      [1, 1, 1, 1],
+      [0.7, 0.7, 0.7, 1],
+      [0.4, 0.4, 0.4, 1],
+      [0, 0, 0, 1]
+    ],
 
   	/**
   		* Memory mapping
@@ -161,19 +154,6 @@ X.Video = (function() {
       	X.Utils.fill(pixels);
       	this.cached_tiles[t] = pixels;
       }
-
-      // Maintain cached palettes for faster access
-
-      var palettes = [this.cached_bg_colors, this.cached_obj_colors_0, this.cached_obj_colors_1];
-      
-      _.each(palettes, function(palette, index) {
-      	X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
-	      	for (var b = 0; b < 4; ++b)
-						palette[b] = colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
-          /*if (index > 0)
-            palette[0] = color_transparent;*/
-    		});
-      });
     },
 
     reset: function() {
@@ -194,30 +174,19 @@ X.Video = (function() {
       if (!this.display_enable)
         return;
 
-      /*
-      var line_cycles = this.mode == 2 ? this.mode_cycles : this.mode_durations[2] + this.mode_cycles;
-      var line_x_now = Math.floor(line_cycles / (this.mode_durations[2] + this.mode_durations[3]) * 160);
-      var scan_length = line_x_now - this.line_x;
-      */
-
       // Background
-
       if (this.bg_enable)
-        X.Renderer.scan_background(0, this.line_y, 256);
+        X.Renderer.scan_background(this.line_y);
 
       // Window
-      
       if (this.window_enable) {
 
       }
 
       // Objects
-
       if (this.obj_enable) {
 
       }
-
-//      this.line_x = line_x_now;
     },
 
     next_frame: function() {
@@ -301,6 +270,8 @@ X.Renderer = (function() {
   var renderer;
   var canvas;
 
+  // Layers
+
   var bg_layer;
   var bg_colors;
   var bg_vertices;
@@ -312,6 +283,14 @@ X.Renderer = (function() {
   var obj_layer;
   var obj_colors;
   var obj_vertices;
+
+  // Cached palettes:
+
+  var cached_bg_palette = [];
+  var cached_obj_palette_0 = [];
+  var cached_obj_palette_1 = [];
+
+  // Shaders
 
   var vertex_shader = '\
     attribute vec4 a_color;\
@@ -373,22 +352,36 @@ X.Renderer = (function() {
 
       var pixels = new THREE.PointCloud(geometry, material);
       bg_layer.add(pixels);
+
+
+      // Maintain cached palettes for faster access
+
+      var palettes = [cached_bg_palette, cached_obj_palette_0, cached_obj_palette_1];
+      
+      _.each(palettes, function(palette, index) {
+        X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
+          for (var b = 0; b < 4; ++b) {
+            var color = X.Video.colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
+            palette[b] = new THREE.Color(color[0], color[1], color[2]);
+          }
+        });
+      });
     },
 
     reset: function() {
 
     },
 
-    scan_background: function(x, y, length) {
+    scan_background: function(y) {
 
-      for (var p = 0; p < length; ++p) {
+      var ty = Math.floor(y/8);
+      var py = y % 8;
+
+      for (var x = 0; x < 256; ++x) {
         
-        var ox = x + p;
-
         // Fetch the tile
 
-        var tx = Math.floor(ox/8);
-        var ty = Math.floor(y/8);
+        var tx = Math.floor(x/8);
 
         var tile_number = X.Memory.r(X.Video.bg_tile_map + ty*32 + tx);
         var tile_index = X.Video.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
@@ -397,19 +390,18 @@ X.Renderer = (function() {
         
         // Fetch the pixel color
 
-        var px = ox % 8;
-        var py = y % 8;
-        var color = X.Video.cached_bg_colors[tile[py*8 + px]];
+        var px = x % 8;
+        var color = cached_bg_palette[tile[py*8 + px]];
 
         // Draw the pixel
 
-        this.scan_pixel(bg_layer, ox, y, color);
+        this.scan_pixel(bg_layer, x, y, color);
       }
     },
 
     scan_pixel: function(layer, x, y, color) {
 
-      bg_colors.value[y*256 + x] = new THREE.Color(color[0], color[1], color[2]);
+      bg_colors.value[y*256 + x] = color;
       bg_colors.needsUpdate = true;
     },
 
@@ -421,7 +413,7 @@ X.Renderer = (function() {
 
     draw_background: function(destination_canvas, scrolling, wrapping) {
 
-      renderer.render(scene, camera); // Where should I do that?!
+      renderer.render(scene, camera); // XXX Where should I do that?!
 return;
       var sx = scrolling ? X.Video.scroll_x : 0;
       var sy = scrolling ? X.Video.scroll_y : 0;

@@ -152,7 +152,7 @@ X.Debugger = (function() {
   };
 
   var update_tiles = function() {
-
+return; // TODO let renderer handle it
     var image = tiles_canvas.createImageData(8, 8);
 
     for (var y = 0; y < 24; ++y) {

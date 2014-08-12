@@ -17,7 +17,7 @@ X.Utils = (function() {
   	},
     
     signed: function(value) {
-      return value < 0x80 ? value : value - 0xFF;
+      return value < 0x80 ? value : value - 0x100;
     },
     
   	wrap8: function(value) {
