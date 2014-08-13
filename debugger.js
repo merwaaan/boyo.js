@@ -15,8 +15,9 @@ X.Debugger = (function() {
 
   var breakpoints = [];
 
-  var tiles_canvas;
-  var background_canvas;
+  var tile_data_canvas;
+  var background_map_0_canvas;
+  var background_map_1_canvas;
   var oam = [];
 
   var init_buttons = function() {
@@ -145,32 +146,41 @@ X.Debugger = (function() {
     }
   };
 
-  var init_tiles = function() {
+  var init_tile_data = function() {
 
-    tiles_canvas = document.querySelector('section#debugger canvas#tiles').getContext('2d');
+    tile_data_canvas = document.querySelector('section#debugger canvas#tile_data').getContext('2d');
   };
 
-  var update_tiles = function() {
+  var update_tile_data = function() {
 
     // Draw each tile
     for (var y = 0; y < 24; ++y)
       for (var x = 0; x < 16; ++x)
-        X.Renderer.draw_tile(tiles_canvas, y*16 + x, x*8, y*8);
+        X.Renderer.draw_tile_data(tile_data_canvas, y*16 + x, x*8, y*8);
   };
 
-  var init_background = function() {
+  var init_background_maps = function() {
 
-    background_canvas = document.querySelector('section#debugger canvas#background').getContext('2d');
-    background_canvas.strokeStyle = '#FF0000';
+    background_map_0_canvas = document.querySelector('section#debugger canvas#background_map_0').getContext('2d');
+    background_map_0_canvas.strokeStyle = '#FF0000';
+
+    background_map_1_canvas = document.querySelector('section#debugger canvas#background_map_1').getContext('2d');
+    background_map_1_canvas.strokeStyle = '#FF0000';
   };
 
-  var update_background = function() {
+  var update_background_maps = function() {
 
-    // Draw background
-    X.Renderer.draw_background_map(background_canvas);
+    // Draw backgrounds
+    X.Renderer.draw_background_map(background_map_0_canvas, 0x9800);
+    X.Renderer.draw_background_map(background_map_1_canvas, 0x9C00);
 
-    // Draw scrolling frame
-    background_canvas.strokeRect(X.Video.scroll_x, X.Video.scroll_y, 160, 144);
+    // Draw scrolling frames
+
+    background_map_0_canvas.strokeRect(X.Video.scroll_x, X.Video.scroll_y, 160, 144);
+    background_map_1_canvas.strokeRect(X.Video.scroll_x, X.Video.scroll_y, 160, 144);
+
+    background_map_0_canvas.strokeRect(X.Video.window_x, X.Video.window_y, 160, 144);
+    background_map_1_canvas.strokeRect(X.Video.window_x, X.Video.window_y, 160, 144);
   };
 
   var init_oam = function() {
@@ -206,7 +216,7 @@ X.Debugger = (function() {
 
       // Draw the corresponding tile
       var tile_index = X.Memory.r(index + 2);
-      X.Renderer.draw_tile(object[0].getContext('2d'), tile_index, 0, 0);
+      X.Renderer.draw_tile_data(object[0].getContext('2d'), tile_index, 0, 0);
 
       // Update the info
       object[1].textContent = X.Utils.hex8(X.Memory.r(index));
@@ -225,8 +235,8 @@ X.Debugger = (function() {
       init_flags();
       init_memory();
       init_breakpoints();
-      init_tiles();
-      init_background();
+      init_tile_data();
+      init_background_maps();
       init_oam();
     },
 
@@ -243,8 +253,8 @@ X.Debugger = (function() {
       update_registers();
       update_flags();
       update_memory();
-      update_tiles();
-      update_background();
+      update_tile_data();
+      update_background_maps();
       update_oam();
     },
 
