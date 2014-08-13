@@ -356,22 +356,35 @@ X.Renderer = (function() {
         pos_x -= 8;
 
         var tile_number = X.Memory.r(address + 2);
-        var tile = X.Video.cached_tiles[tile_number];
-
         var attributes = X.Memory.r(address + 3);
         var obj_above = X.Utils.bit(attributes, 7);
         var flip_y = X.Utils.bit(attributes, 6);
         var flip_x = X.Utils.bit(attributes, 5);
         var palette = X.Utils.bit(attributes, 4) ? cached_palettes.obj_1 : cached_palettes.obj_0;
 
-        for (var y = 0; y < 8; ++y) {
-          for (var x = 0; x < 8; ++x) {
+        var tile_size = X.Video.obj_size == 8 ? 1 : 2;
 
-            var color_index = tile[y*8 + x];
-            if (color_index == 0)
-              continue;
+        for (var h = 0; h < tile_size; ++h) {
 
-            this.scan_pixel(pos_x + x, pos_y + y, palette[color_index]);    
+          var tile = X.Video.cached_tiles[tile_number + h];
+
+          for (var y = 0; y < 8; ++y) {
+
+            var py = pos_y + y + h*8;
+
+            for (var x = 0; x < 8; ++x) {
+
+              var px = pos_x + x;
+
+              if (px >= 160 || py >= 144)
+                continue;
+            
+              var color_index = tile[y*8 + x];
+              if (color_index == 0)
+                continue;
+
+              this.scan_pixel(px, py, palette[color_index]);    
+            }
           }
         }
       }
