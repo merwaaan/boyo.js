@@ -72,3 +72,7 @@ section#video canvas#tiles, section#video canvas#background, section#video table
 	display: inline-block;
 	vertical-align: top;
 }
+
+section#video table#oam span {
+	padding-left: 0.2em;
+}

@@ -231,7 +231,10 @@ X.Video = (function() {
 
               // Check line coincidence
               if (this.line_y == this.line_y_compare) {
-                //this.line_y_coincidence = true;
+                this.line_y_coincidence = true;
+                if (this.line_y_coincidence_interrupt) {
+                  X.CPU.request_interrupt(1);
+                }
               }
 	          }
 	        }
@@ -287,8 +290,6 @@ X.Renderer = (function() {
       var canvas_dom = document.createElement('canvas');
       canvas_dom.width = 160;
       canvas_dom.height = 144;
-      document.querySelector('section#game').appendChild(canvas_dom);
-
       canvas = canvas_dom.getContext('2d');
 
       buffer = canvas.createImageData(canvas_dom.width, canvas_dom.height);
@@ -303,6 +304,7 @@ X.Renderer = (function() {
             var color = X.Video.colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
             cached_palettes[palette][b] = [color[0], color[1], color[2], color[3]];
           }
+          // TODO
         });
       });
     },
@@ -402,7 +404,7 @@ X.Renderer = (function() {
     draw_frame: function(destination_canvas) {
 
       this.scan_obj(); // TODO sync with scanlining
-      canvas.putImageData(buffer, 0, 0);
+      destination_canvas.putImageData(buffer, 0, 0);
       
 
       //this.draw_background(destination_canvas, true);
@@ -420,6 +422,40 @@ X.Renderer = (function() {
     draw_obj: function(destination_canvas) {
 
       // TODO
+    },
+
+    draw_tile: function(destination_canvas, tile_index, x, y) {
+
+      var tile = X.Video.cached_tiles[tile_index];
+
+      var buffer = destination_canvas.createImageData(8, 8);
+
+      for (var py = 0; py < 8; ++py) {
+        for (var px = 0; px < 8; ++px) {
+
+          var color_index = tile[py*8 + px];
+          var color = cached_palettes.bg[color_index];
+
+          var index = (py*8 + px) * 4;
+          buffer.data[index] = color[0];
+          buffer.data[index + 1] = color[1];
+          buffer.data[index + 2] = color[2];
+          buffer.data[index + 3] = color[3];
+        }
+      }
+
+      destination_canvas.putImageData(buffer, x, y);
+    },
+
+    draw_background_map: function(destination_canvas) {
+
+      for (var ty = 0; ty < 32; ++ty) {
+        for (var tx = 0; tx < 32; ++tx) {
+          var tile_number = X.Memory.r(X.Video.bg_tile_map + ty*32 + tx);
+          var tile_index = X.Video.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
+          this.draw_tile(destination_canvas, tile_index, tx*8, ty*8);
+        }
+      }
     }
 
   };

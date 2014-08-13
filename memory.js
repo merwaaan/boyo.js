@@ -94,7 +94,8 @@ X.Memory = (function() {
 
       // Blargg's tests output
       else if (address == 0xFF01) {
-        //console.log(String.fromCharCode(value));
+        console.log(String.fromCharCode(value));
+        return data[address] = value;
       }
 
       // DIV reset

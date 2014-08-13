@@ -22,9 +22,9 @@ X.Debugger = (function() {
   var init_buttons = function() {
 
     var buttons = document.querySelectorAll('section#buttons button');
-    buttons[0].addEventListener('click', function() { X.GB.pause(); buttons[0].disabled = true; buttons[1].disabled = false; buttons[2].disabled = false; });
+    buttons[0].addEventListener('click', function() { X.GB.pause(); /*buttons[0].disabled = true; buttons[1].disabled = false; buttons[2].disabled = false;*/ });
     buttons[1].addEventListener('click', function() { X.GB.step(); });
-    buttons[2].addEventListener('click', function() { X.GB.run(); buttons[2].disabled = true; buttons[0].disabled = false;buttons[1].disabled = true;  }); 
+    buttons[2].addEventListener('click', function() { X.GB.run(); /*buttons[2].disabled = true; buttons[0].disabled = false;buttons[1].disabled = true;*/  }); 
  }; // TODO initial states
 
   var init_registers = function() {
@@ -148,36 +148,26 @@ X.Debugger = (function() {
   var init_tiles = function() {
 
     tiles_canvas = document.querySelector('section#debugger canvas#tiles').getContext('2d');
-    update_tiles();
   };
 
   var update_tiles = function() {
-return; // TODO let renderer handle it
-    var image = tiles_canvas.createImageData(8, 8);
 
-    for (var y = 0; y < 24; ++y) {
-      for (var x = 0; x < 16; ++x) {
-        var tile = X.Video.cached_tiles[y*16 + x];
-        X.Utils.cache_to_image(tile, X.Video.test_palette, image.data);
-        tiles_canvas.putImageData(image, x*8, y*8);
-      }
-    }
+    // Draw each tile
+    for (var y = 0; y < 24; ++y)
+      for (var x = 0; x < 16; ++x)
+        X.Renderer.draw_tile(tiles_canvas, y*16 + x, x*8, y*8);
   };
 
   var init_background = function() {
 
     background_canvas = document.querySelector('section#debugger canvas#background').getContext('2d');
     background_canvas.strokeStyle = '#FF0000';
-
-    update_background();
   };
 
   var update_background = function() {
-return; // TODO
-    background_canvas.clearRect(0, 0, 256, 256);
 
     // Draw background
-    X.Renderer.draw_background(background_canvas);
+    X.Renderer.draw_background_map(background_canvas);
 
     // Draw scrolling frame
     background_canvas.strokeRect(X.Video.scroll_x, X.Video.scroll_y, 160, 144);
@@ -195,8 +185,7 @@ return; // TODO
         var cell = row.insertCell();
 
         var canvas = document.createElement('canvas');
-        canvas.width = 8;
-        canvas.height = 8;
+        canvas.width = canvas.height = 8;
         cell.appendChild(canvas);
 
         for (var e = 0; e < 4; ++e) {
@@ -207,21 +196,17 @@ return; // TODO
         oam[r*5 + c] = cell.children;
       }
     }
-
-    update_oam();
   };
 
   var update_oam = function() {
 
-    _.each(oam, function(object, index) {
+    _.each(oam, function(object, i) {
 
-      var index = 0xFE00 + index*4;
+      var index = 0xFE00 + i*4;
 
       // Draw the corresponding tile
-      var tile_number = X.Memory.r(index + 2);
-      var tile = tiles_canvas.createImageData(8, 8);
-      //X.Utils.cache_to_image(X.Video.cached_tiles[tile_number], X.Video.cached_obj_colors_0, tile.data);
-      //object[0].getContext('2d').putImageData(tile, 0, 0);
+      var tile_index = X.Memory.r(index + 2);
+      X.Renderer.draw_tile(object[0].getContext('2d'), tile_index, 0, 0);
 
       // Update the info
       object[1].textContent = X.Utils.hex8(X.Memory.r(index));

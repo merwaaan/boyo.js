@@ -27,36 +27,43 @@ X.Cartridge = (function() {
     },
 
     MBC1: {
-      rom_bank: 0,
+      rom_bank: 1,
       ram_bank: 0,
       mode: 0, // 0 -> ROM banking, 1 -> RAM banking
       ram_enabled: false,
       r: function(address) {
-        if (address < 0x4000) {
-          return data[address];  
+        if (address < 0x4000) { // ROM Bank 0
+          return data[address];
         }
-        else if (address < 0x8000) {
+        else if (address < 0x8000) { // ROM Bank n
          return data[this.rom_bank*0x4000 + address - 0x4000];
         }
-        else if (address < 0xC000) {
+        else if (address < 0xC000) { // RAM bank n
           return data[0xA000 + this.ram_bank*0x2000 + address - 0x2000]; // TODO check
         }
       },
       w: function(address, value) {
         if (address < 0x2000) {
           this.ram_enabled = value == 0x0A;
+          //console.log('ram',this.ram_enabled);
         }
         else if (address < 0x4000) {
           this.rom_bank = (this.rom_bank & 0x60) | (value & 0x1F);
+          //console.log('rom',this.rom_bank);
         }
         else if (address < 0x6000) {
-          if (this.mode == 0)
+          if (this.mode == 0) {
             this.rom_bank = (this.rom_bank & 0x1F) | (value & 0x3) << 5;
-          else
+            //console.log('rom_',this.rom_bank);
+          }
+          else {
             this.ram_bank = value & 0x3;
+            //console.log('ram',this.ram_bank);
+          }
         }
         else {
-          this.mode = value; // & 1 ???
+          this.mode = value; // TODO change bank on mode change
+          //console.log('mode',this.mode == 0 ? 'rom' : 'ram');
         }
       }
     },
