@@ -145,7 +145,13 @@ X.Video = (function() {
 
       X.Renderer.init();
 
-      canvas = document.querySelector('section#game canvas').getContext('2d');
+      var canvas_dom = document.querySelector('section#game canvas');
+      canvas_dom.addEventListener('click', function(event) {
+        canvas_dom.webkitRequestFullScreen();
+      });
+
+      canvas = canvas_dom.getContext('2d');
+
 
 			background_maps = new Array(2048);
 		  tile_data = new Array(6144);
@@ -284,9 +290,11 @@ X.Renderer = (function() {
   };
 
   return {
-cp:null,
+
     init: function() {
-this.cp = cached_palettes;
+
+      //
+
       var canvas_dom = document.createElement('canvas');
       canvas_dom.width = 160;
       canvas_dom.height = 144;

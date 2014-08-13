@@ -26,6 +26,11 @@ section#game canvas {
 	background-color: white;
 }
 
+section#game canvas:-webkit-full-screen {
+	width: 200%;
+	border: 5px solid red;
+}
+
 section#game table {
 	margin: auto;
 	border-spacing: 2em;
