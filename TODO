@@ -6,8 +6,6 @@ CPU
 VIDEO
 - window support
 - STAT interrupts
-- webGL transparency
-- bg wrapping
 - sprite flip
 - sprite priority
 - 8*16 sprites
@@ -19,6 +17,7 @@ GAMES
 - MBC2
 - MBC3
 - save/load (localStorage?)
+- SMB display bug
 
 MISC
 - fix joypad

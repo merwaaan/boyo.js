@@ -173,7 +173,7 @@ return; // TODO let renderer handle it
   };
 
   var update_background = function() {
-
+return; // TODO
     background_canvas.clearRect(0, 0, 256, 256);
 
     // Draw background

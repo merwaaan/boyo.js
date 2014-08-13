@@ -22,7 +22,7 @@ X.Joypad = (function() {
       return byte | (keys[code] ? 0 : 1) << bit;
     }, 0);
 
-    return selection | input;
+    return input;
   };
 
   return {
