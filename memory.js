@@ -118,7 +118,7 @@ X.Memory = (function() {
 
     watch: function(address, handler) {
 
-      data.watch(address, handler);
+      data.watch(address, handler); // XXX only work on non-mapped areas
     },
 
     init: function() {

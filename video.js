@@ -284,9 +284,9 @@ X.Renderer = (function() {
   };
 
   return {
-
+cp:null,
     init: function() {
-
+this.cp = cached_palettes;
       var canvas_dom = document.createElement('canvas');
       canvas_dom.width = 160;
       canvas_dom.height = 144;
@@ -304,7 +304,6 @@ X.Renderer = (function() {
             var color = X.Video.colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
             cached_palettes[palette][b] = [color[0], color[1], color[2], color[3]];
           }
-          // TODO
         });
       });
     },
@@ -351,9 +350,12 @@ X.Renderer = (function() {
       var ty = Math.floor(sy/8);
       var py = sy % 8;
 
-      for (var x = X.Video.window_x; x < 160; ++x) {
+      var x0 = Math.max(X.Video.window_x - 7, 0);
+      var x1 = X.Video.window_x < 7 ? 160 - (7 - X.Video.window_x) : 160;
 
-        var sx = x - X.Video.window_x;
+      for (var x = x0; x < x1; ++x) {
+
+        var sx = x - X.Video.window_x + 7;
         var tx = Math.floor(sx/8);
         var px = sx % 8;
 
