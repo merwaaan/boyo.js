@@ -3,7 +3,6 @@ CPU
 - cycles wrt interrupts
 
 VIDEO
-- STAT interrupts
 - sprite flip
 - sprite priority
 - 8*16 sprites

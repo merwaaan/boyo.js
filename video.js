@@ -171,8 +171,6 @@ X.Video = (function() {
     	this.mode = 2; // Really necessary??
     },
 
-    line_x: 0,
-
     scan: function(cycles) {
 
       if (!this.display_enable)
@@ -207,6 +205,11 @@ X.Video = (function() {
 
       this.mode_cycles -= this.mode_durations[this.mode];
       this.mode = m;
+
+      if (this.oam_interrupt && m == 2 ||
+          this.vblank_interrupt && m == 1 ||
+          this.hblank_interrupt && m == 0)
+        X.CPU.request_interrupt(1)
     },
 
     step: function(cycles) {
@@ -225,14 +228,12 @@ X.Video = (function() {
           	else {
 	            this.change_mode(2);
 	            ++this.line_y;
-              this.line_x = 0;
 
               // Check line coincidence
               if (this.line_y == this.line_y_compare) {
                 this.line_y_coincidence = true;
-                if (this.line_y_coincidence_interrupt) {
+                if (this.line_y_coincidence_interrupt)
                   X.CPU.request_interrupt(1);
-                }
               }
 	          }
 	        }
@@ -243,7 +244,6 @@ X.Video = (function() {
           if (this.mode_cycles > this.mode_durations[1]) {
             this.change_mode(2);  
             this.line_y = 0;
-            this.line_x = 0;
           }
           break;
 
