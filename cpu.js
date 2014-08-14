@@ -140,7 +140,7 @@ X.CPU = (function() {
     init: function() {
 
       // Generate the instruction set
-      this.instructions = X.InstructionImplementations.generate();
+      this.instructions = X.InstructionSet.generate();
     },
 
     reset: function() {
@@ -160,18 +160,18 @@ X.CPU = (function() {
         // Fetch
         
         var opcode = X.Memory.r(this.PC);
-        opcode = opcode == 0xCB ? 0x100 + X.Memory.r(this.PC + 1) : opcode;  
+
+        var cb_prefix = opcode == 0xCB;
+        if (cb_prefix)
+          opcode = 0x100 + X.Memory.r(this.PC + 1);
 
         var instruction = this.instructions[opcode];
-        var bytes = X.InstructionImplementations.opcodes[opcode][1];
-        cycles = X.InstructionImplementations.opcodes[opcode][2]; // TODO handle X/Y cycles
-
-        var operands = X.Memory.r_(this.PC + 1, bytes);
+        var bytes = instruction.bytes;
+        var operands = X.Memory.r_(this.PC + (cb_prefix ? 2 : 1), bytes - (cb_prefix ? 2 : 1));
 
         // Execute
-        
-        this.PC = X.Utils.wrap16(this.PC + bytes);
-        instruction(operands);
+
+        cycles = instruction.execute(operands);
 
         //X.Debugger.log_instruction(opcode);
       }

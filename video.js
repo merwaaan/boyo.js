@@ -54,12 +54,6 @@ X.Video = (function() {
     get obj_palette_0() { return X.Memory.r(0xFF48); },
     get obj_palette_1() { return X.Memory.r(0xFF49); },
 
-    /*colors: [
-      [1, 1, 1, 1],
-      [0.7, 0.7, 0.7, 1],
-      [0.4, 0.4, 0.4, 1],
-      [0, 0, 0, 1]
-    ],*/
     colors: [
       [0xFF, 0xFF, 0xFF, 0xFF],
       [0xAA, 0xAA, 0xAA, 0xFF],
@@ -149,9 +143,7 @@ X.Video = (function() {
       canvas_dom.addEventListener('click', function(event) {
         canvas_dom.webkitRequestFullScreen();
       });
-
       canvas = canvas_dom.getContext('2d');
-
 
 			background_maps = new Array(2048);
 		  tile_data = new Array(6144);
@@ -304,8 +296,8 @@ X.Renderer = (function() {
 
       // Maintain cached palettes for faster access
 
-      var palettes = ['bg', 'obj_0', 'obj_1'];
-      
+      var palettes = ['bg', 'obj_0', 'obj_1']; 
+
       _.each(palettes, function(palette, index) {
         X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
           for (var b = 0; b < 4; ++b) {
@@ -318,6 +310,13 @@ X.Renderer = (function() {
 
     reset: function() {
 
+      // Cache default palettes to begin with
+
+      var palettes = ['bg', 'obj_0', 'obj_1'];
+
+      _.each(palettes, function(palette, index) {        
+        cached_palettes[palette] = [X.Video.colors[0], X.Video.colors[1], X.Video.colors[2], X.Video.colors[3]];
+      });
     },
 
     scan_background: function(y) {

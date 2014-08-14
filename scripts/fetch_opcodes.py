@@ -3,14 +3,7 @@ import re
 import urllib2
 from bs4 import BeautifulSoup
 
-opcodes = [None] * 512
-
-# Fetch opcode map
-
-html = urllib2.urlopen('http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html').read()
-soup = BeautifulSoup(html);
-
-# Extract the opcodes
+# More explicit mnemonics
 
 alternatives = {
   'LD A,(C)': 'LD A,($FF00+C)',
@@ -22,6 +15,8 @@ alternatives = {
   'LD A,(HL-)': 'LDD A,(HL)',
   'LD (HL-),A': 'LDD (HL),A'
 }
+
+# opcodes of flag-dependant instructions
 
 flag_dependent = [
   0x20,
@@ -42,6 +37,15 @@ flag_dependent = [
   0xDC
 ]
 
+# Fetch opcode map
+
+html = urllib2.urlopen('http://www.pastraiser.com/cpu/gameboy/gameboy_opcodes.html').read()
+soup = BeautifulSoup(html);
+
+# Extract the opcodes
+
+opcodes = [None] * 512
+
 for t, table in enumerate(soup.find_all('table')[:2]):
   for r, row in enumerate(table.find_all('tr')[1:]):
     for c, cell in enumerate(row.find_all('td')[1:]):
@@ -59,7 +63,7 @@ for t, table in enumerate(soup.find_all('table')[:2]):
       instruction = cell.contents[0].encode('utf-8')
       specs = cell.contents[2].split()
       bytes = int(specs[0].encode('utf-8'))
-      cycles = int(specs[1].encode('utf-8').split('/')[0]) # TODO handle X/Y cycles
+      cycles = [int(cycle) for cycle in specs[1].encode('utf-8').split('/')] # TODO handle X/Y cycles
 
       # Use alternative mnemonics for convenience
       if instruction in alternatives:
@@ -69,9 +73,14 @@ for t, table in enumerate(soup.find_all('table')[:2]):
       if opcode == 0xE2 or opcode == 0xF2:
         bytes = 1
         
-      # Fix LD (HL) -> LD HL
+      # Fix JP (HL) -> JP HL
       if opcode == 0xE9:
         instruction = 'JP HL'
+
+      # Homogenize d8, a8, r8, d16, a16 into d8, d16
+      instruction = instruction.replace('a8', 'd8') ;
+      instruction = instruction.replace('r8', 'd8') ;
+      instruction = instruction.replace('a16', 'd16') ;
 
       # Switch to less ambiguous mnemonics for conditional flag statuses
       if opcode in flag_dependent:
@@ -84,7 +93,7 @@ for t, table in enumerate(soup.find_all('table')[:2]):
     
 # Output to JS
 
-js = ('opcodes: ' + str(opcodes) + ',').replace('None', 'null')
+js = ('var opcode_specs = ' + str(opcodes) + ';').replace('None', 'null')
 
 with open('opcodes.txt', 'w') as file:
   file.write(js)

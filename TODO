@@ -1,10 +1,8 @@
 CPU
 - fix frequency
-- cycles wrt branching
 - cycles wrt interrupts
 
 VIDEO
-- window support
 - STAT interrupts
 - sprite flip
 - sprite priority
@@ -21,6 +19,5 @@ GAMES
 
 MISC
 - fix joypad
-- fullscreen mode
 - nice UI
 - gamepad

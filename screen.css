@@ -28,7 +28,6 @@ section#game canvas {
 
 section#game canvas:-webkit-full-screen {
 	width: 200%;
-	border: 5px solid red;
 }
 
 section#game table {

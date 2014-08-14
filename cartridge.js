@@ -97,6 +97,8 @@ X.Cartridge = (function() {
 
   	r: function(address) {
 
+      // XXX what if no cartridge?
+      
   		return this.mbc.r(address);
   	},
 
