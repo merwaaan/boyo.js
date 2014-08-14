@@ -148,10 +148,6 @@ X.Video = (function() {
 			background_maps = new Array(2048);
 		  tile_data = new Array(6144);
 		  oam = new Array(160);
-
-		  X.Utils.fill(background_maps);
-		  X.Utils.fill(tile_data);
-		  X.Utils.fill(oam);
       
       for (var t = 0, l = this.cached_tiles.length; t < l; ++t) {
       	var pixels = new Array(64);
@@ -168,7 +164,7 @@ X.Video = (function() {
 		  X.Utils.fill(tile_data);
 		  X.Utils.fill(oam);
 
-    	this.mode = 2; // Really necessary??
+    	this.mode = 2; // Really??
     },
 
     scan: function(cycles) {

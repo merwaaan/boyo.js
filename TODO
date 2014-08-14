@@ -5,7 +5,6 @@ CPU
 VIDEO
 - sprite flip
 - sprite priority
-- 8*16 sprites
 
 AUDIO
 - sound support...

@@ -77,6 +77,10 @@ for t, table in enumerate(soup.find_all('table')[:2]):
       if opcode == 0xE9:
         instruction = 'JP HL'
 
+      # Fix LD HL,SP+r8 -> LDHL SP,d8
+      if opcode == 0xF8:
+        instruction = 'LDHL SP,d8'
+
       # Homogenize d8, a8, r8, d16, a16 into d8, d16
       instruction = instruction.replace('a8', 'd8') ;
       instruction = instruction.replace('r8', 'd8') ;
