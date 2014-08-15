@@ -1,21 +1,22 @@
 CPU
-- fix frequency
 - cycles wrt interrupts
 
 VIDEO
-- sprite flip
 - sprite priority
+- custom palettes
+- sync sprite drawing with scanlines
 
 AUDIO
-- sound support...
+- sound support (audio API?)
 
 GAMES
 - MBC2
 - MBC3
+- MBC4
+- MBC5
 - save/load (localStorage?)
 - SMB display bug
 
 MISC
-- fix joypad
-- nice UI
 - gamepad
+- nice UI

@@ -3,8 +3,8 @@
 Boyo is a Game Boy emulator written in JavaScript.
 
 ![Super Mario Land](http://i.imgur.com/p0ADG8A.png)
-![Zelda: Link's Awakening](http://i.imgur.com/EukNdBc)
-![Tetris](http://i.imgur.com/9KaFXUl)
+![Zelda: Link's Awakening](http://i.imgur.com/EukNdBc.png)
+![Tetris](http://i.imgur.com/9KaFXUl.png)
 
 ---
 
