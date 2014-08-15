@@ -92,11 +92,6 @@ X.Memory = (function() {
         return X.Joypad.w(value);
       }
 
-      // Blargg's tests output
-      else if (address == 0xFF01) {
-        //console.log(String.fromCharCode(value));
-      }
-
       // DIV reset
       else if (address == 0xFF04) {
         data[address] = 0;

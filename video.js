@@ -418,7 +418,7 @@ X.Renderer = (function() {
               if (px >= 160 || py >= 144)
                 continue;
             
-              var color_index = tile[y*8 + x];
+              var color_index = tile[(flip_y ? 7-y : y)*8 + (flip_x ? 7-x : x)];
               if (color_index == 0)
                 continue;
 

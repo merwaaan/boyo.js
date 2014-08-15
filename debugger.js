@@ -114,8 +114,6 @@ X.Debugger = (function() {
     button.addEventListener('click', function() {
       toggle_breakpoint(parseInt(input.value, 16));
     });
-
-    toggle_breakpoint(0x3EE);
   };
 
   var toggle_breakpoint = function(address) {
@@ -273,14 +271,12 @@ X.Debugger = (function() {
     },
 
     log_instruction: function(opcode) {
-try {
+
       var address = X.CPU.PC;
       var bytes = parseInt(X.CPU.instructions[opcode].bytes);
       var instruction = X.Memory.r_(address, bytes).map(function(x){ return x.toString(16) });
       var instruction_name = X.CPU.instructions[opcode].name;
-} catch(e) {
-console.log(e,address, bytes);
-}
+
       this.log(address.toString(16), instruction, instruction_name);
     },
 

@@ -69,6 +69,10 @@ X.Cartridge = (function() {
           this.mode = value;
           //console.log('mode',this.mode == 0 ? 'rom' : 'ram');
         }
+        else {
+          // TODO
+          console.log('stuff should be written to RAM here');
+        }
       }
     },
   };

@@ -204,14 +204,8 @@ X.InstructionSet = (function() {
           X.CPU.SP = X.Utils.wrap16(x);
           X.CPU.zero = false;
           X.CPU.addsub = false;
-          if (b >= 0) {
-            X.CPU.halfcarry = (a & 0xF) + (b & 0xF) > 0xF; // XXX carry from bit 7 or 15?? (same for hcarry)
-            X.CPU.carry = (a & 0xFF) + (b & 0xFF) > 0xFF;
-          }
-          else {
-            X.CPU.halfcarry = (a & 0xF) < (b & 0xF);
-            X.CPU.carry = (a & 0xFF) < (b & 0xFF);
-          }
+          X.CPU.halfcarry = (a & 0xF) + (b & 0xF) > 0xF;
+          X.CPU.carry = (a & 0xFF) + (b & 0xFF) > 0xFF;
         };
 
         case 'A':
@@ -285,11 +279,29 @@ X.InstructionSet = (function() {
       };
     },
     
+    // Instruction code from DMGBoy (https://code.google.com/p/dmgboy/source/browse/src/Instructions.cpp#437)
     DAA: function(parameters) {
       return function(parameters, operands) {
-        // TODO
-        console.log('DAA');
-      };
+        var a = X.CPU.A;
+        if (!X.CPU.addsub) {
+          if (X.CPU.halfcarry || ((a & 0xF) > 9))
+              a += 0x06;
+          if (X.CPU.carry || (a > 0x9F))
+              a += 0x60;
+        }
+        else {
+          if (X.CPU.halfcarry)
+              a = (a - 6) & 0xFF;
+          if (X.CPU.carry)
+              a -= 0x60;
+        }
+        if (a > 0xFF)
+          X.CPU.carry = true;
+        X.CPU.A = X.Utils.wrap8(a);
+        X.CPU.zero = X.CPU.A == 0;
+        X.CPU.halfcarry = false;
+        // http://www.youtube.com/watch?v=rJp86_tj9KQ
+      }
     },
     
     DEC: function(parameters) {
@@ -368,7 +380,7 @@ X.InstructionSet = (function() {
       };
     },
 
-    // Handle this instruction as a special case because of the unique 16bit write in memory
+    // Special case because of the unique 16bit write in memory
     LD_nn_SP: function(parameters) {
       return function(parameters, operands) {
         var address = parameters[0].get(operands);
@@ -393,14 +405,8 @@ X.InstructionSet = (function() {
         X.CPU.HL = X.Utils.wrap16(x);
         X.CPU.zero = false;
         X.CPU.addsub = false;
-        if (b >= 0) {
-          X.CPU.halfcarry = (a & 0xFFF) + (b & 0xFFF) > 0xFFF;
-          X.CPU.carry = (a & 0xFFFF) + (b & 0xFFFF) > 0xFFFF; // TODO simpler x > FFFF
-        }
-        else {
-          X.CPU.halfcarry = (a & 0xFFF) < (b & 0xFFF);
-          X.CPU.carry = (a & 0xFFFF) < (b & 0xFFFF);
-        }
+        X.CPU.halfcarry = (a & 0xF) + (b & 0xF) > 0xF;
+        X.CPU.carry = (a & 0xFF) + (b & 0xFF) > 0xFF;
       };
     },
 
@@ -496,7 +502,7 @@ X.InstructionSet = (function() {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
         var bit7 = X.Utils.bit(x, 7);
-        x = X.Utils.wrap8(X.CPU.A << 1 | bit7);
+        x = X.Utils.wrap8(x << 1 | bit7);
         parameters[0].set(operands, x);
         X.CPU.zero = x == 0;
         X.CPU.addsub = false;
