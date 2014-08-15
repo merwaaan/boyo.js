@@ -21,15 +21,13 @@ X.GB = (function() {
       X.Joypad.init();
       X.Debugger.init();
 
-      X.Cartridge.init(tetris);
-          
-      this.reset();
-
-      // Reset the console when a new game is inserted
+      // Reset the console when a game is inserted
       
       var gb = this;
 
-      document.querySelector('input#local_rom').addEventListener('change', function() {
+      var local_rom_select = document.querySelector('input#local_rom');
+      local_rom_select.selectedIndex = -1;
+      local_rom_select.addEventListener('change', function() {
         
         var reader = new FileReader();
         reader.addEventListener('load', function() {
@@ -45,7 +43,8 @@ X.GB = (function() {
         reader.readAsBinaryString(this.files[0]);
       });
 
-      document.querySelector('select#hosted_rom').addEventListener('change', function(event) {
+      var hosted_rom_select = document.querySelector('select#hosted_rom');
+      hosted_rom_select.addEventListener('change', function(event) {
         
         var name = event.target.selectedOptions[0].textContent;
 
@@ -86,7 +85,7 @@ X.GB = (function() {
 
       stats.begin();
 
-      // Emulate until a V-Blank, a HALT, a STOP or a breakpoint
+      // Emulate until a V-Blank or a breakpoint
       do {
 
         if (X.Debugger.reached_breakpoint()) {
