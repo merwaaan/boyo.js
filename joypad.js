@@ -17,7 +17,7 @@ X.Joypad = (function() {
     if (selection != 0x10 && selection != 0x20)
       return 0xF;
 
-    var selected = selected == 0x10 ? codes[0] : codes[1];
+    var selected = selection == 0x10 ? codes[0] : codes[1];
     var input = _.reduce(selected, function(byte, code, bit) {
       return byte | (keys[code] ? 0 : 1) << bit;
     }, 0);
@@ -56,12 +56,10 @@ X.Joypad = (function() {
     },
 
     r: function() {
-
       return to_byte();
     },
 
     w: function(value) {
-
       selection = value & 0x30;
       return to_byte();
     }

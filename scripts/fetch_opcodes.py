@@ -73,6 +73,10 @@ for t, table in enumerate(soup.find_all('table')[:2]):
       if opcode == 0xE2 or opcode == 0xF2:
         bytes = 1
         
+      # Replace LD (a16),SP -> LD_nn_SP d16,SP to handle it as a spacial case
+      if opcode == 0x08:
+        instruction = 'LD_nn_SP d16,SP'
+
       # Fix JP (HL) -> JP HL
       if opcode == 0xE9:
         instruction = 'JP HL'

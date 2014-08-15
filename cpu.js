@@ -114,11 +114,14 @@ X.CPU = (function() {
       */
 
     push: function(value) {
-      X.Memory.w(--this.SP, value); // Wrap stack???
+      this.SP = X.Utils.wrap16(this.SP - 1);
+      X.Memory.w(this.SP, value);
     },
 
     pop: function() {
-      return X.Memory.r(this.SP++); // Wrap stack???
+      var value = X.Memory.r(this.SP);
+      this.SP = X.Utils.wrap16(this.SP + 1);
+      return value;
     },
 
     jump: function(address) {
@@ -160,7 +163,8 @@ X.CPU = (function() {
         // Fetch
         
         var opcode = X.Memory.r(this.PC);
-
+        if (opcode == 0x8)
+          console.log('LD (a16),SP');
         var cb_prefix = opcode == 0xCB;
         if (cb_prefix)
           opcode = 0x100 + X.Memory.r(this.PC + 1);
