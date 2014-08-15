@@ -107,7 +107,7 @@ X.InstructionSet = (function() {
     });
     
     var procedure_name = name.split(' ')[0];
-    var procedure = instruction_implementations[procedure_name](parameters, parameter_names); // TODO do it more cleanly, without parameter_names (compare parameter type?)
+    var procedure = instruction_implementations[procedure_name](parameters);
 
     var bytes= specs[1];
     var cycles = specs[2];
@@ -123,6 +123,7 @@ X.InstructionSet = (function() {
 
     var parameter;
 
+    // Get the parametere name without paentheses
     var core = parameter_name.match(/^\(?(.+?)\)?$/)[1];
 
     if (core.match(/^[A-Z]+$/)) { // Register

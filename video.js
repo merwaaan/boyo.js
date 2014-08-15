@@ -205,7 +205,7 @@ X.Video = (function() {
       if (this.oam_interrupt && m == 2 ||
           this.vblank_interrupt && m == 1 ||
           this.hblank_interrupt && m == 0)
-        X.CPU.request_interrupt(1)
+        X.CPU.request_interrupt(1) // XXX can several really be requested at the same time?
     },
 
     step: function(cycles) {
@@ -430,38 +430,18 @@ X.Renderer = (function() {
     },
 
     scan_pixel: function(x, y, color) {
-try {
+
       var index = (y * 160 + x) * 4;
       buffer.data[index] = color[0];
       buffer.data[index + 1] = color[1];
       buffer.data[index + 2] = color[2];
       buffer.data[index + 3] = color[3];
-    }catch (err) {
-      console.log(x,y,color);
-    }
     },
 
     draw_frame: function(destination_canvas) {
 
       this.scan_obj(); // TODO sync with scanlining
       destination_canvas.putImageData(buffer, 0, 0);
-      
-
-      //this.draw_background(destination_canvas, true);
-      //this.draw_obj(destination_canvas);
-    },
-
-    draw_background: function(destination_canvas, scrolling, wrapping) {
-
-      var sx = scrolling ? X.Video.scroll_x : 0;
-      var sy = scrolling ? X.Video.scroll_y : 0;
-
-      destination_canvas.drawImage(canvas, sx, sy, 160, 144, 0, 0, 160, 144);
-    },
-
-    draw_obj: function(destination_canvas) {
-
-      // TODO
     },
 
     draw_tile_data: function(destination_canvas, tile_index, x, y) {

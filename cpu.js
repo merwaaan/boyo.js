@@ -89,7 +89,7 @@ X.CPU = (function() {
       // Execute interrupts if enabled
       if (this.interrupt_master_enable)
         for (var b = 0; b < 5; ++b)
-          if (X.Utils.bit(interrupts, b))
+          if (X.Utils.bit(interrupts, b)) // TODO suspend others
             this.do_interrupt(b);
     },
 
@@ -163,8 +163,7 @@ X.CPU = (function() {
         // Fetch
         
         var opcode = X.Memory.r(this.PC);
-        if (opcode == 0x8)
-          console.log('LD (a16),SP');
+        
         var cb_prefix = opcode == 0xCB;
         if (cb_prefix)
           opcode = 0x100 + X.Memory.r(this.PC + 1);

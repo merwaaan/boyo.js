@@ -46,29 +46,6 @@ X.Utils = (function() {
 
     /**
       *
-      * Drawing
-      *
-      */
-
-    tile_to_cache: function(tile) {
-
-    },
-
-    cache_to_image: function(cache, palette, image) {
-
-      for (var y = 0; y < 8; ++y)
-        for (var x = 0; x < 8; ++x) {
-          var color = palette[cache[y*8 + x]];
-          var index = (y*8 + x) * 4;
-          image[index] = color[0] * 255;
-          image[index + 1] = color[1] * 255;
-          image[index + 2] = color[2] * 255;
-          image[index + 3] = 255;
-        }
-    },
-
-    /**
-      *
       * Misc.
       *
       */

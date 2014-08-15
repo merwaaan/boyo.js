@@ -75,15 +75,15 @@ X.Cartridge = (function() {
 
   return {
 
-		get title() { return _.map(data.slice(0x134, 0x144), function(x) { return String.fromCharCode(x); }).join(''); },
+    get title() { return _.map(data.slice(0x134, 0x144), function(x) { return String.fromCharCode(x); }).join(''); },
     get manufacturer() { return data.slice(0x13F, 0x143); },
-		get licensee() { return data.slice(0x144, 0x146); }, // TODO old new
-		get destination() { return data[0x14A]; },
-		get version() { return data[0x14C]; },
+    get licensee() { return data.slice(0x144, 0x146); }, // TODO old new
+    get destination() { return data[0x14A]; },
+    get version() { return data[0x14C]; },
 
-		get type() { return data[0x147]; },
-		get rom_size() { return 0x8000 << data[0x148]; },
-		get ram_size() { return data[0x149]; },
+    get type() { return data[0x147]; },
+    get rom_size() { return 0x8000 << data[0x148]; },
+    get ram_size() { return data[0x149]; },
 
     mbc: null,
 
