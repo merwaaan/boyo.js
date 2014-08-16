@@ -6,17 +6,6 @@ X.Cartridge = (function() {
 
 	var data = [];
 
-  var mbc_names = {
-    None: [0x0, 0x8, 0x9],
-    MBC1: [0x1, 0x2, 0x3],
-    MBC2: [0x5, 0x6],
-    MBC3: [0xF, 0x10, 0x11, 0x13],
-    MBC4: [0x15, 0x16, 0x17],
-    MBC5: [0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E]
-  };
-
-  var ram_sizes = [0, 0x800, 0x2000, 0x20000];
-
   var MemoryBankControllers = {
     
     None: {
@@ -76,6 +65,41 @@ X.Cartridge = (function() {
     },
   };
 
+  var mbcs = {
+    // code: [description, implementation]
+    0x00: ['ROM ONLY', MemoryBankControllers.None],
+    0x01: ['MBC1', MemoryBankControllers.MBC1],
+    0x02: ['MBC1+RAM', MemoryBankControllers.MBC1],
+    0x03: ['MBC1+RAM+BATTERY', MemoryBankControllers.MBC1],
+    0x05: ['MBC2', MemoryBankControllers.MBC2],
+    0x06: ['MBC2+BATTERY', MemoryBankControllers.None],
+    0x08: ['ROM+RAM', MemoryBankControllers.None],
+    0x09: ['ROM+RAM+BATTERY', MemoryBankControllers.None],
+    0x0B: ['MMM01', undefined],
+    0x0C: ['MMM01+RAM', undefined],
+    0x0D: ['MMM01+RAM+BATTERY', undefined],
+    0x0F: ['MBC3+TIMER+BATTERY', undefined],
+    0x10: ['MBC3+TIMER+RAM+BATTERY', undefined],
+    0x11: ['MBC3', undefined],
+    0x12: ['MBC3+RAM', undefined],
+    0x13: ['MBC3+RAM+BATTERY', undefined],
+    0x15: ['MBC4', undefined],
+    0x16: ['MBC4+RAM', undefined],
+    0x17: ['MBC4+RAM+BATTERY', undefined],
+    0x19: ['MBC5', undefined],
+    0x1A: ['MBC5+RAM', undefined],
+    0x1B: ['MBC5+RAM+BATTERY', undefined],
+    0x1C: ['MBC5+RUMBLE', undefined],
+    0x1D: ['MBC5+RUMBLE+RAM', undefined],
+    0x1E: ['MBC5+RUMBLE+RAM+BATTERY', undefined],
+    0xFC: ['POCKET CAMERA', undefined],
+    0xFD: ['BANDAI TAMA5', undefined],
+    0xFE: ['HuC3', undefined],
+    0xFF: ['HuC1+RAM+BATTERY', undefined]
+  };
+
+  var ram_sizes = [0, 0x800, 0x2000, 0x20000];
+
   return {
 
     get title() { return _.map(data.slice(0x134, 0x144), function(x) { return String.fromCharCode(x); }).join(''); },
@@ -94,12 +118,9 @@ X.Cartridge = (function() {
 
       data = bytes;
 
-      _.each(mbc_names, function(codes, type) {
-        if (_.contains(codes, this.type)) {
-          this.mbc = MemoryBankControllers[type];
-          return;
-        }
-      }.bind(this));
+      this.mbc = mbcs[this.type][1];
+      if (!this.mbc)
+        console.error(mbcs[this.type][0] + ' not supported yet');
   	},
 
   	r: function(address) {
