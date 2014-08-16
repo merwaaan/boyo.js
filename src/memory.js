@@ -45,10 +45,10 @@ X.Memory = (function() {
         return X.Joypad.r();
       }
 
-      /*// Sound registers
+      // Sound registers
       else if (address >= 0xFF10 && address <= 0xFF3F) {
         return X.Audio.r(address);
-      }*/
+      }
 
     	return data[address];
     },
@@ -96,10 +96,10 @@ X.Memory = (function() {
         data[address] = 0;
       }
 
-      /*// Sound registers
+      // Sound registers
       else if (address >= 0xFF10 && address <= 0xFF3F) {
         return X.Audio.w(address, value);
-      }*/
+      }
 
       // DMA transfers
       else if (address == 0xFF46) {

@@ -103,7 +103,9 @@ X.GB = (function() {
       } while (!vblank && cycles > 0);
 
       stats.end();
-      
+
+      X.Audio.step();
+
       // Repeat...
       if (this.running)
         requestAnimationFrame(this.frame.bind(this));
