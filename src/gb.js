@@ -38,7 +38,7 @@ X.GB = (function() {
 
           gb.reset();
           X.Cartridge.init(data);
-          if (!gb.running) gb.run();
+          if (X.Cartridge.ready && !gb.running) gb.run();
         });
 
         reader.readAsBinaryString(this.files[0]);
@@ -56,7 +56,7 @@ X.GB = (function() {
         request.onload = function() {
           gb.reset();
           X.Cartridge.init(new Uint8Array(request.response));
-          if (!gb.running) gb.run();
+          if (X.Cartridge.ready && !gb.running) gb.run();
         };
 
         request.send(null);
