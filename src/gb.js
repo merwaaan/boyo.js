@@ -4,11 +4,11 @@ X.GB = (function() {
 
   'use strict';
 
-  var paused = false;
-
   var stats;
 
   return {
+
+    running: false,
 
     init: function() {
   
@@ -38,7 +38,7 @@ X.GB = (function() {
 
           gb.reset();
           X.Cartridge.init(data);
-          gb.frame();
+          if (!gb.running) gb.run();
         });
 
         reader.readAsBinaryString(this.files[0]);
@@ -56,7 +56,7 @@ X.GB = (function() {
         request.onload = function() {
           gb.reset();
           X.Cartridge.init(new Uint8Array(request.response));
-          gb.frame();
+          if (!gb.running) gb.run();
         };
 
         request.send(null);
@@ -91,9 +91,10 @@ X.GB = (function() {
       do {
 
         if (X.Debugger.reached_breakpoint()) {
-          console.log('breakpoint!');
+          this.running = false;
           X.Debugger.update();
-          return;  
+          console.info('Breakpoint reached');
+          break;
         }
 
         var cycles = X.CPU.step();
@@ -104,30 +105,25 @@ X.GB = (function() {
       stats.end();
       
       // Repeat...
-      if (!paused) {
+      if (this.running)
         requestAnimationFrame(this.frame.bind(this));
-      }
-      else {
-        X.Debugger.update();
-        paused = false;
+    },
+
+    run: function() {
+      if (!this.running) {
+        this.running = true;
+        this.frame();
       }
     },
 
     pause: function() {
-
-      paused = true;
+      this.running = false;
     },
 
     step: function() {
-
       X.Video.step(X.CPU.step());
       X.Debugger.update();
     },
-
-    run: function() {
-
-      this.frame();
-    }
 
   };
 
