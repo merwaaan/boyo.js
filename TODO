@@ -19,3 +19,4 @@ GAMES
 MISC
 - gamepad
 - nice UI
+- use arraybuffers instead of normal arrays (useful for 8bit/16bit aligned read/write)

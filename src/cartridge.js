@@ -102,7 +102,7 @@ X.Cartridge = (function() {
 
   return {
 
-    get title() { return _.map(data.slice(0x134, 0x144), function(x) { return String.fromCharCode(x); }).join(''); },
+    get title() { return _.map(data.slice(0x134, 0x144), function(x) { return String.fromCharCode(x); }).join('').replace(/\s+/g, ' '); },
     get manufacturer() { return data.slice(0x13F, 0x143); },
     get licensee() { return data.slice(0x144, 0x146); }, // TODO old new
     get destination() { return data[0x14A]; },
@@ -114,20 +114,32 @@ X.Cartridge = (function() {
 
     mbc: null,
 
+    //ready: false,
+
   	init: function(bytes) {
 
-      data = bytes;
-
+      // TODO avoid this (directly keep an arraybuffer?)
+      for (var i = 0; i < bytes.length; ++i)
+        data[i] = bytes[i];
+      
       this.mbc = mbcs[this.type][1];
-      if (!this.mbc)
+
+      if (!this.mbc) {
+        this.ready = false;
         console.error(mbcs[this.type][0] + ' not supported yet');
+      }
+      else {
+        this.ready = true;
+        console.info('Loaded program ' + this.to_string());
+      }
   	},
 
-  	r: function(address) {
+    to_string: function() {
+      return '' + this.title + ' [' + mbcs[this.type][0] + ']';
+    },
 
-      // XXX what if no cartridge?
-      
-  		return this.mbc.r(address);
+  	r: function(address) {
+      return this.mbc.r(address);
   	},
 
   	w: function(address, value) {
