@@ -264,7 +264,7 @@ X.Debugger = (function() {
       else {
         this.logs.push(Array.prototype.slice.call(arguments).join('       '));
 
-        if (this.logs.length > 10) {
+        if (this.logs.length > 50) {
           this.logs = _.rest(this.logs);
         }
       }

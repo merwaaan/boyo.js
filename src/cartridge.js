@@ -15,16 +15,18 @@ X.Cartridge = (function() {
     MBC5: [0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E]
   };
 
+  var ram_sizes = [0, 0x800, 0x2000, 0x20000];
+
   var MemoryBankControllers = {
     
     None: {
       
       r: function(address) {
-        return data[address]; // TODO ram
+        return address < 0x8000 ? data[address] : data[0x8000 + address - 0xA000];
       },
       
       w: function(address, value) {
-        return data[address] = value; // TODO ram
+        return address < 0x8000 ? data[address] = value : data[0x8000 + address - 0xA000] = value;
       }
     },
 
@@ -47,31 +49,28 @@ X.Cartridge = (function() {
         }
         else { // RAM bank n
           var ram_bank = this.mode == 0 ? 0 : this.rom_bank_hi;
-          return data[X.Cartridge.rom_size + ram_bank*0x2000 + address - 0xA000]; // TODO handle RAM sizes
+          return data[X.Cartridge.rom_size + ram_bank*0x2000 + address - 0xA000];
         }
       },
       
+      // TODO optimize (better to compute banks once on w than more often on r)
       w: function(address, value) {
         
         if (address < 0x2000) {
           this.ram_enable = value == 0x0A;
-          //console.log('ram',this.ram_enable);
         }
         else if (address < 0x4000) {
           this.rom_bank_lo = value;
-          //console.log('rom_lo',this.rom_bank_lo);
         }
         else if (address < 0x6000) {
           this.rom_bank_hi = value;
-          //console.log('rom_hi',this.rom_bank_hi);
         }
         else if (address < 0x8000) {
           this.mode = value;
-          //console.log('mode',this.mode == 0 ? 'rom' : 'ram');
         }
         else {
-          // TODO
-          console.log('stuff should be written to RAM here');
+          var ram_bank = this.mode == 0 ? 0 : this.rom_bank_hi;
+          return data[X.Cartridge.rom_size + ram_bank*0x2000 + address - 0xA000] = value;
         }
       }
     },
@@ -87,7 +86,7 @@ X.Cartridge = (function() {
 
     get type() { return data[0x147]; },
     get rom_size() { return 0x8000 << data[0x148]; },
-    get ram_size() { return data[0x149]; },
+    get ram_size() { return ram_sizes[data[0x149]]; },
 
     mbc: null,
 

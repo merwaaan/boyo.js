@@ -14,7 +14,7 @@ Boyo is a Game Boy emulator written in JavaScript.
 - Joypad controls through keyboard
 - Basic debugger
 
-##### Future plans:
+##### Future plans
 - support more memory bank controllers (MBC2/3/4)
 - add sound
 - implement battery-backed RAM
