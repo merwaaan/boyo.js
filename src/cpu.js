@@ -89,8 +89,10 @@ X.CPU = (function() {
       // Execute interrupts if enabled
       if (this.interrupt_master_enable)
         for (var b = 0; b < 5; ++b)
-          if (X.Utils.bit(interrupts, b)) // TODO suspend others
+          if (X.Utils.bit(interrupts, b)) {
             this.do_interrupt(b);
+            return;
+          }
     },
 
     do_interrupt: function(bit) {
@@ -183,7 +185,7 @@ X.CPU = (function() {
       this.update_timers(cycles); // TODO should not update on STOP??
 
       // Check for interrupts
-      this.check_interrupts();
+      this.check_interrupts(); // TODO Should executing an interrupt consume cycles?
 
       return cycles;
     },
