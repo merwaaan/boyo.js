@@ -113,7 +113,7 @@ X.Video = (function() {
 		},
 
 		/**
-			* 
+			*
 			*/
 
     cached_tiles: new Array(384),
@@ -129,7 +129,7 @@ X.Video = (function() {
     		var a = X.Utils.bit(tile_data[memory_row], p);
         var b = X.Utils.bit(tile_data[memory_row + 1], p);
         var c = a | b << 1;
-              
+
         this.cached_tiles[tile_number][image_row*8 + (7-p)] = c;
       }
 
@@ -148,7 +148,7 @@ X.Video = (function() {
 			background_maps = new Array(2048);
 		  tile_data = new Array(6144);
 		  oam = new Array(160);
-      
+
       for (var t = 0, l = this.cached_tiles.length; t < l; ++t) {
       	var pixels = new Array(64);
       	X.Utils.fill(pixels);
@@ -238,14 +238,14 @@ X.Video = (function() {
         case 1: // V-Blank
           this.line_y = 145 + Math.floor(this.mode_cycles/456);
           if (this.mode_cycles > this.mode_durations[1]) {
-            this.change_mode(2);  
+            this.change_mode(2);
             this.line_y = 0;
           }
           break;
 
         case 2: // OAM access
           if (this.mode_cycles > this.mode_durations[2]) {
-            this.change_mode(3);  
+            this.change_mode(3);
           }
           break;
 
@@ -257,9 +257,9 @@ X.Video = (function() {
           break;
       }
 	  }
-  	
+
   };
-  
+
 })();
 
 X.Renderer = (function() {
@@ -286,13 +286,13 @@ X.Renderer = (function() {
       var canvas_dom = document.createElement('canvas');
       canvas_dom.width = 160;
       canvas_dom.height = 144;
-      canvas = canvas_dom.getContext('2d');
+      canvas = canvas_dom.getContext('2d', { alpha: false });
 
       buffer = canvas.createImageData(canvas_dom.width, canvas_dom.height);
 
       // Maintain cached palettes for faster access
 
-      var palettes = ['bg', 'obj_0', 'obj_1']; 
+      var palettes = ['bg', 'obj_0', 'obj_1'];
 
       _.each(palettes, function(palette, index) {
         X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
@@ -310,7 +310,7 @@ X.Renderer = (function() {
 
       var palettes = ['bg', 'obj_0', 'obj_1'];
 
-      _.each(palettes, function(palette, index) {        
+      _.each(palettes, function(palette, index) {
         cached_palettes[palette] = [X.Video.colors[0], X.Video.colors[1], X.Video.colors[2], X.Video.colors[3]];
       });
     },
@@ -322,7 +322,7 @@ X.Renderer = (function() {
       var py = sy % 8;
 
       for (var x = 0; x < 160; ++x) {
-        
+
         var sx = (x + X.Video.scroll_x) % 256;
         var tx = Math.floor(sx/8);
         var px = sx % 8;
@@ -333,7 +333,7 @@ X.Renderer = (function() {
         var tile_index = X.Video.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
 
         var tile = X.Video.cached_tiles[tile_index];
-        
+
         // Fetch the pixel color
 
         var color = cached_palettes.bg[tile[py*8 + px]];
@@ -368,7 +368,7 @@ X.Renderer = (function() {
         var tile_index = X.Video.bg_window_tile_data == 0x8000 ? tile_number : 256 + X.Utils.signed(tile_number);
 
         var tile = X.Video.cached_tiles[tile_index];
-        
+
         // Fetch the pixel color
 
         var color = cached_palettes.bg[tile[py*8 + px]];
@@ -417,12 +417,12 @@ X.Renderer = (function() {
 
               if (px >= 160 || py >= 144)
                 continue;
-            
+
               var color_index = tile[(flip_y ? 7-y : y)*8 + (flip_x ? 7-x : x)];
               if (color_index == 0)
                 continue;
 
-              this.scan_pixel(px, py, palette[color_index]);    
+              this.scan_pixel(px, py, palette[color_index]);
             }
           }
         }
