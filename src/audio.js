@@ -81,8 +81,8 @@ X.Audio = (function() {
       if (e.add_mode === 0) { --e.volume_counter; }
       else { ++e.volume_counter; }
 
-      if (e.volume_counter < 0) { e.volume.counter = 0; }
-      else if (e.volume_counter > 15) { e.volume.counter = 15; }
+      if (e.volume_counter < 0) { e.volume_counter = 0; }
+      else if (e.volume_counter > 15) { e.volume_counter = 15; }
 
       this.volume.gain.value = e.volume_counter / 15;
     }
@@ -105,7 +105,7 @@ X.Audio = (function() {
   Channel.prototype.w_nrx2 = function(value) {
     this.envelope.start_volume = value >> 4;
     this.envelope.add_mode = (value >> 3) & 0x1;
-    this.envelope.length = value & 0x7;
+    this.envelope.period = value & 0x7;
   };
 
   // NR13 FF13 FFFF FFFF Frequency LSB
@@ -127,7 +127,8 @@ X.Audio = (function() {
 
       this.oscillator.frequency.value = 131072 / (2048 - this.frequency);
       this.envelope.timer = this.envelope.period;
-      this.volume.gain.value = this.envelope.start_volume;
+      this.envelope.volume_counter = this.envelope.start_volume;
+      this.volume.gain.value = this.envelope.volume_couter / 15;
     }
   };
 
