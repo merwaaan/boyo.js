@@ -17,6 +17,8 @@ X.Audio = (function() {
                    0xff, 0xbf, 0x7f, 0xff, 0x9f, 0xff, 0xbf, 0xff,
                    0xff, 0x00, 0x00, 0xbf, 0x77, 0xf3, 0xf1];
 
+  var duty_waves = [];
+
   function Channel() {
     // NRx1
     this.duty = 0;
@@ -43,7 +45,7 @@ X.Audio = (function() {
 
   Channel.prototype.init = function(audio) {
     this.oscillator = audio.createOscillator();
-    this.oscillator.type = 'square';
+    this.oscillator.setPeriodicWave(duty_waves[2]);
     this.oscillator.frequency.value = 3000;
     this.oscillator.start();
 
@@ -97,8 +99,13 @@ X.Audio = (function() {
 
   // NR11 FF11 DDLL LLLL Duty, Length load (64-L)
   Channel.prototype.w_nrx1 = function(value) {
-    this.duty = value >> 6;
+    var duty = value >> 6;
     this.length_counter.counter = 64 - (value & 0x3f);
+
+    if (this.duty !== duty) {
+      this.duty = duty;
+      this.oscillator.setPeriodicWave(duty_waves[this.duty]);
+    }
   };
 
   // NR12 FF12 VVVV APPP Starting volume, Envelope add mode, period
@@ -155,6 +162,28 @@ X.Audio = (function() {
 
     init: function() {
       audio = new window.AudioContext();
+
+      // Create oscillators for all duty patterns
+      var harmonics = 32;      // A higher value yields a sharper sound
+      var length = 1 + harmonics;
+
+      duty_waves = [.125, .25, .5, .75].map(function createDuty(d) {
+        var a = new Float32Array(length);
+        var b = new Float32Array(length);
+
+        // Pulse waveform expressed as a Fourier series
+        // Formula from: http://www.dspguide.com/ch13/4.htm
+
+        a[0] = d;
+        b[0] = 0;
+
+        for (var n = 1; n < length; ++n) {
+          b[n] = 0;
+          a[n] = 2 / (n * Math.PI) * Math.sin(n * Math.PI * d);
+        }
+
+        return audio.createPeriodicWave(a, b);
+      });
 
       sq1.init(audio);
       sq2.init(audio);
