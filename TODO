@@ -7,7 +7,13 @@ VIDEO
 - sync sprite drawing with scanlines
 
 AUDIO
-- sound support (audio API?)
+- Square channels
+  - sweep for channel 1
+- Wave channel
+- Noise channel
+- Master volume
+- Power control
+- Blargg's tests
 
 GAMES
 - MBC2
