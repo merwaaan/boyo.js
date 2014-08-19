@@ -35,6 +35,11 @@ X.Memory = (function() {
         return X.Cartridge.r(address);
       }
 
+      // RAM echo
+      else if (address < 0xDFFF) {
+        //console.log('echo!');
+      }
+
       // OAM
       else if (address >= 0xFE00 && address < 0xFEA0) {
         return X.Video.r(address);

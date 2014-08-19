@@ -31,17 +31,12 @@ X.GB = (function() {
         
         var reader = new FileReader();
         reader.addEventListener('load', function() {
-
-          var data = [];
-          for (var i = 0; i < this.result.length; i++)
-            data.push(this.result.charCodeAt(i));
-
           gb.reset();
-          X.Cartridge.init(data);
+          X.Cartridge.init(this.result);
           if (X.Cartridge.ready && !gb.running) gb.run();
         });
 
-        reader.readAsBinaryString(this.files[0]);
+        reader.readAsArrayBuffer(this.files[0]);
       });
 
       var hosted_rom_select = document.querySelector('select#hosted_rom');
@@ -55,7 +50,7 @@ X.GB = (function() {
 
         request.onload = function() {
           gb.reset();
-          X.Cartridge.init(new Uint8Array(request.response));
+          X.Cartridge.init(request.response);
           if (X.Cartridge.ready && !gb.running) gb.run();
         };
 
