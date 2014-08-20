@@ -11,9 +11,9 @@ X.GB = (function() {
     running: false,
 
     init: function() {
-  
+
       // Initialize all modules
-      
+
       X.Memory.init();
       X.CPU.init();
       X.Video.init();
@@ -22,13 +22,13 @@ X.GB = (function() {
       X.Debugger.init();
 
       // Reset the console when a game is inserted
-      
+
       var gb = this;
 
       var local_rom_select = document.querySelector('input#local_rom');
       local_rom_select.selectedIndex = -1;
       local_rom_select.addEventListener('change', function() {
-        
+
         var reader = new FileReader();
         reader.addEventListener('load', function() {
           gb.reset();
@@ -41,7 +41,7 @@ X.GB = (function() {
 
       var hosted_rom_select = document.querySelector('select#hosted_rom');
       hosted_rom_select.addEventListener('change', function(event) {
-        
+
         var name = event.target.selectedOptions[0].textContent;
 
         var request = new XMLHttpRequest();

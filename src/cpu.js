@@ -16,7 +16,7 @@ X.CPU = (function() {
 
     PC: 0,
     SP: 0,
-    
+
     A: 0, F: 0, get AF() { return X.Utils.hilo(this.A, this.F); }, set AF(x) { this.A = X.Utils.hi(x); this.F = X.Utils.lo(x) & 0xF0; },
     B: 0, C: 0, get BC() { return X.Utils.hilo(this.B, this.C); }, set BC(x) { this.B = X.Utils.hi(x); this.C = X.Utils.lo(x); },
     D: 0, E: 0, get DE() { return X.Utils.hilo(this.D, this.E); }, set DE(x) { this.D = X.Utils.hi(x); this.E = X.Utils.lo(x); },
@@ -24,12 +24,12 @@ X.CPU = (function() {
 
     get_flag: function(mask) { return !!(this.F & mask); },
     set_flag: function(mask, set) { set ? this.F |= mask : this.F &= ~mask; },
-   
+
     get carry() { return this.get_flag(1 << 4); }, set carry(x) { this.set_flag(1 << 4, x); },
     get halfcarry() { return this.get_flag(1 << 5); }, set halfcarry(x) { this.set_flag(1 << 5, x); },
     get addsub() { return this.get_flag(1 << 6); }, set addsub(x) { this.set_flag(1 << 6, x); },
     get zero() { return this.get_flag(1 << 7); }, set zero(x) { this.set_flag(1 << 7, x); },
-    
+
     /**
       * Timer and divider
       */
@@ -85,7 +85,7 @@ X.CPU = (function() {
 
       // Interrupts terminate HALT
       this.halted = false;
-      
+
       // Execute interrupts if enabled
       if (this.interrupt_master_enable)
         for (var b = 0; b < 5; ++b)
@@ -110,7 +110,7 @@ X.CPU = (function() {
       */
 
     instructions: [],
-    
+
     /**
       * Methods
       */
@@ -156,16 +156,16 @@ X.CPU = (function() {
     },
 
     step: function() {
-      
+
       var cycles = 1; // TODO check cycles on HALT/STOP
       // TODO handle timer & PPU without CPU
 
       if (!this.halted && !this.stopped) {
-      
+
         // Fetch
-        
+
         var opcode = X.Memory.r(this.PC);
-        
+
         var cb_prefix = opcode == 0xCB;
         if (cb_prefix)
           opcode = 0x100 + X.Memory.r(this.PC + 1);

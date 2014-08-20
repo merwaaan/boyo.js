@@ -2,9 +2,9 @@ var X = X ||{};
 
 X.Cartridge = (function() {
 
-	'use strict';
+  'use strict';
 
-	var rom;
+  var rom;
   var rom_data;
 
   var ram;
@@ -20,7 +20,7 @@ X.Cartridge = (function() {
 
     this.mode = 0;
     this.ram_enabled = false;
-    
+
     this.rom_bank = 1;
     this.rom_bank_data = new Uint8Array(rom, 0x4000, 0x4000);
 
@@ -71,14 +71,14 @@ X.Cartridge = (function() {
 
   MBC1.prototype.switch_rom_bank = function(bank) {
     if (bank == 0 || bank == 0x20 || bank == 0x40 || bank == 0x60) bank += 1;
-    MBC.prototype.switch_rom_bank.call(this, bank); 
+    MBC.prototype.switch_rom_bank.call(this, bank);
   };
 
   MBC1.prototype.w = function(address, value) {
     if (address < 0x2000) { // XXX should check if there is RAM??
       this.ram_enabled = (value & 0xF) == 0xA;
     }
-    else if (address < 0x4000) { 
+    else if (address < 0x4000) {
       var rom_bank = (this.rom_bank & 0x60) | (value & 0x1F);
       this.switch_rom_bank(rom_bank);
     }
@@ -159,7 +159,7 @@ X.Cartridge = (function() {
 
     ready: false,
 
-  	init: function(buffer) {
+    init: function(buffer) {
 
       rom = buffer;
       rom_data = new Uint8Array(rom);
@@ -178,20 +178,20 @@ X.Cartridge = (function() {
         this.ready = true;
         console.info('Loaded program ' + this.to_string());
       }
-  	},
+    },
 
     to_string: function() {
       return '' + /*this.title +*/ ' [' + mbcs[this.type][0] + ']';
     },
 
-  	r: function(address) {
+    r: function(address) {
       return this.mbc.r(address);
-  	},
+    },
 
-  	w: function(address, value) {
+    w: function(address, value) {
 
-  		return this.mbc.w(address, value);
-  	}
+      return this.mbc.w(address, value);
+    }
 
   };
 

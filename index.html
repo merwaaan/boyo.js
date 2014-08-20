@@ -1,4 +1,4 @@
- <!doctype html>
+<!doctype html>
 <head>
   <title>Boyo — a Game Boy emulator written in JavaScript</title>
   <meta charset="utf-8">
@@ -6,16 +6,16 @@
   <script src="src/utils.js"></script>
   <script src="src/memory.js"></script>
   <script src="src/cartridge.js"></script>
-	<script src="src/instructions.js"></script>
-	<script src="src/cpu.js"></script>
+  <script src="src/instructions.js"></script>
+  <script src="src/cpu.js"></script>
   <script src="src/video.js"></script>
   <script src="src/audio.js"></script>
-  <script src="src/joypad.js"></script> 
+  <script src="src/joypad.js"></script>
   <script src="src/gb.js"></script>
-	<script src="src/debugger.js"></script> 
-    
-  <script src="libs/underscore.min.js"></script>  
-  <script src="libs/stats.min.js"></script>  
+  <script src="src/debugger.js"></script>
+
+  <script src="libs/underscore.min.js"></script>
+  <script src="libs/stats.min.js"></script>
 
   <link rel="stylesheet" type="text/css" href="screen.css"/>
 </head>
@@ -75,7 +75,7 @@
     <section id="error"></section>
 
   </section>
-  
+
   <section id="debugger">
 
     <section id="buttons">
@@ -83,7 +83,7 @@
       <button>Step</button>
       <button>Run</button>
     </section>
-    
+
     <section id="registers">
       <table>
         <tr><td>AF</td><td></td></tr>
@@ -142,10 +142,10 @@
   </section>
 
   <script>
-  	window.addEventListener('load', function() {
+    window.addEventListener('load', function() {
       X.GB.init();
     });
-	</script>
-  
+  </script>
+
 </body>
 </html>

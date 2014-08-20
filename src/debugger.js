@@ -25,7 +25,7 @@ X.Debugger = (function() {
     var buttons = document.querySelectorAll('section#buttons button');
     buttons[0].addEventListener('click', function() { X.GB.pause(); /*buttons[0].disabled = true; buttons[1].disabled = false; buttons[2].disabled = false;*/ });
     buttons[1].addEventListener('click', function() { X.GB.step(); });
-    buttons[2].addEventListener('click', function() { X.GB.run(); /*buttons[2].disabled = true; buttons[0].disabled = false;buttons[1].disabled = true;*/  }); 
+    buttons[2].addEventListener('click', function() { X.GB.run(); /*buttons[2].disabled = true; buttons[0].disabled = false;buttons[1].disabled = true;*/  });
  }; // TODO initial states
 
   var init_registers = function() {
@@ -72,7 +72,7 @@ X.Debugger = (function() {
     // Fill the table and cache cells
     var table = document.querySelector('section#memory table');
     for (var r = 0; r < memory_window_rows; ++r) {
-      
+
       var row = table.insertRow();
       for (var c = 0; c < 17; ++c) {
 
@@ -81,14 +81,14 @@ X.Debugger = (function() {
           memory_window_headers.push(cell);
         else
           memory_window.push(cell);
-      } 
+      }
     }
 
     var input = document.querySelector('section#memory input');
     var button = document.querySelector('section#memory button');
     button.addEventListener('click', function() {
       memory_window_start = Math.floor(parseInt(input.value, 16) / 16) * 16;
-      update_memory();      
+      update_memory();
     });
 
     update_memory();
@@ -99,7 +99,7 @@ X.Debugger = (function() {
     _.each(memory_window_headers, function(h, index) {
       h.textContent = X.Utils.hex16(memory_window_start + index * 16);
     });
-      
+
     _.each(memory_window, function(m, index) {
       var address = memory_window_start + index;
       m.textContent = X.Utils.hex8(X.Memory.r(address));
@@ -121,7 +121,7 @@ X.Debugger = (function() {
     var list = document.querySelector('section#breakpoints ul');
 
     var index = breakpoints.indexOf(address);
-    
+
     // Add new breakpoint
     if (index < 0) {
       breakpoints.push(address);

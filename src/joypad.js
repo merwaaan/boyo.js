@@ -46,8 +46,8 @@ X.Joypad = (function() {
     },
 
     reset: function() {
-      
-      // Initialize all keys to false (up)      
+
+      // Initialize all keys to false (up)
       _.each(_.flatten(codes), function(code) {
         keys[code] = false;
       });
@@ -65,5 +65,5 @@ X.Joypad = (function() {
     }
 
   };
-  
+
 })();

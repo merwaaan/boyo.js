@@ -12,42 +12,40 @@ X.Utils = (function() {
       *
       */
 
-  	bit: function(value, n) {
-  		return !!(value & 1 << n);
-  	},
-    
+    bit: function(value, n) {
+      return !!(value & 1 << n);
+    },
+
     signed: function(value) {
       return value < 0x80 ? value : value - 0x100;
     },
-    
-  	wrap8: function(value) {
-  		return value & 0xFF;
-  	},
-  	
-  	wrap16: function(value) {
-  		return value & 0xFFFF;
-  	},
-    
+
+    wrap8: function(value) {
+      return value & 0xFF;
+    },
+
+    wrap16: function(value) {
+      return value & 0xFFFF;
+    },
+
     hi: function(value) {
       return value >> 8;
     },
-    
+
     lo: function(value) {
       return value & 0x00FF;
     },
-    
+
     hilo: function(hi, lo) {
       return hi << 8 | lo;
     },
-    
+
     random8: function() {
       return Math.floor(Math.random() * 0xFF)
     },
 
     /**
-      *
       * Misc.
-      *
       */
 
     fill: function(array, value) {
@@ -99,7 +97,7 @@ if (!Object.prototype.watch) {
         return newval = val;
       }
       ;
-      
+
       if (delete this[prop]) { // can't watch constants
         Object.defineProperty(this, prop, {
             get: getter
@@ -111,7 +109,7 @@ if (!Object.prototype.watch) {
     }
   });
 }
- 
+
 // object.unwatch
 if (!Object.prototype.unwatch) {
   Object.defineProperty(Object.prototype, "unwatch", {

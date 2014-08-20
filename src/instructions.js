@@ -3,7 +3,7 @@ var X = X || {};
 X.InstructionSet = (function() {
 
   'use strict'
-  
+
   /**
     * List of opcodes fetched from http://www.pastraiser.com/X.CPU/gameboy/gameboy_opcodes.html
     */
@@ -20,18 +20,18 @@ X.InstructionSet = (function() {
     this.type = name.split(' ')[0];
 
     this.bytes = bytes;
-    
+
     this.cycles = cycles;
     this.conditional = cycles.length == 2;
 
     this.procedure = procedure;
-    this.parameters = parameters;   
+    this.parameters = parameters;
   }
 
   Instruction.prototype.execute = function(operands) {
 
     X.CPU.PC = X.Utils.wrap16(X.CPU.PC + this.bytes);
-    
+
     var conditional_result = this.procedure(this.parameters, operands);
 
     if (this.conditional && conditional_result)
@@ -58,7 +58,7 @@ X.InstructionSet = (function() {
 
   function RegisterParameter(register) { this.register = register; }
   X.Utils.inherit(RegisterParameter, Parameter);
-  RegisterParameter.prototype.get = function() { return X.CPU[this.register]; };    
+  RegisterParameter.prototype.get = function() { return X.CPU[this.register]; };
   RegisterParameter.prototype.set = function(operands, value) { return X.CPU[this.register] = value; };
   RegisterParameter.prototype.to_string = function() { return '[' + this.constructor.name + ', ' + this.register + ']'; };
 
@@ -94,7 +94,7 @@ X.InstructionSet = (function() {
   /**
     *
     */
-  
+
   function generate_instruction(opcode, specs) {
 
     var name = specs[0];
@@ -105,7 +105,7 @@ X.InstructionSet = (function() {
     var parameters = parameter_names.map(function(parameter_name) {
       return generate_parameter(opcode, parameter_name);
     });
-    
+
     var procedure_name = name.split(' ')[0];
     var procedure = instruction_implementations[procedure_name](parameters);
 
@@ -118,7 +118,7 @@ X.InstructionSet = (function() {
   /**
     *
     */
-    
+
   function generate_parameter(opcode, parameter_name) {
 
     var parameter;
@@ -137,7 +137,7 @@ X.InstructionSet = (function() {
     }
     else if (core.match(/^[0-7]$/)) { // Bit
       parameter = new FixedValueParameter(parseInt(core));
-    }    
+    }
     else if (core.match(/^[0-3][0|8]H$/)) { // Offset from $0000
       parameter = new FixedValueParameter(parseInt(core, 16));
     }
@@ -149,24 +149,24 @@ X.InstructionSet = (function() {
       var state = parameter_name[1] == 'N' ? false : true;
       var flag = _.last(parameter_name) == 'Z' ? 'zero' : 'carry';
       parameter = new FlagStatusParameter(flag, state);
-    }    
+    }
     else {
       console.warn('Unrecognized parameter, that\'s not supposed to happen!', X.Utils.hex8(opcode), parameter_name);
     }
-    
+
     // If the parameter is between parentheses, add a layer of indirection
-    
+
     if (parameter_name[0] == '(') {
       parameter = new PointerParameter(parameter);
     }
-    
+
     return parameter;
   };
-    
+
   /**
     * Implementations
     */
-    
+
   var instruction_implementations = {
 
     ADC: function(parameters) {
@@ -181,7 +181,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = x > 0xFF;
       };
     },
-    
+
     ADD: function(parameters) {
       switch (parameters[0].register) {
 
@@ -219,9 +219,9 @@ X.InstructionSet = (function() {
           X.CPU.halfcarry = (a & 0xF) + (b & 0xF) > 0xF;
           X.CPU.carry = x > 0xFF;
         };
-      }        
+      }
     },
-    
+
     AND: function(parameters) {
       return function(parameters, operands) {
         X.CPU.A &= parameters[0].get(operands);
@@ -231,7 +231,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = false;
       };
     },
-    
+
     BIT: function(parameters) {
       return function(parameters, operands) {
         X.CPU.zero = !X.Utils.bit(parameters[1].get(), parameters[0].get());
@@ -239,7 +239,7 @@ X.InstructionSet = (function() {
         X.CPU.halfcarry = true;
       };
     },
-    
+
     CALL: function(parameters) {
       return parameters.length == 1 ?
         function(parameters, operands) {
@@ -252,7 +252,7 @@ X.InstructionSet = (function() {
           }
         };
     },
-    
+
     CCF: function(parameters) {
       return function(parameters, operands) {
         X.CPU.addsub = false;
@@ -260,7 +260,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = !X.CPU.carry;
       };
     },
-    
+
     CP: function(parameters) {
       return function(parameters, operands) {
         var b = parameters[0].get(operands);
@@ -270,7 +270,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = X.CPU.A < b;
       };
     },
-    
+
     CPL: function(parameters) {
       return function(parameters, operands) {
         X.CPU.A = ~X.CPU.A & 0xFF;
@@ -278,7 +278,7 @@ X.InstructionSet = (function() {
         X.CPU.halfcarry = true;
       };
     },
-    
+
     // Instruction code from DMGBoy (https://code.google.com/p/dmgboy/source/browse/src/Instructions.cpp#437)
     DAA: function(parameters) {
       return function(parameters, operands) {
@@ -303,11 +303,11 @@ X.InstructionSet = (function() {
         // http://www.youtube.com/watch?v=rJp86_tj9KQ
       }
     },
-    
+
     DEC: function(parameters) {
       return parameters[0] instanceof RegisterParameter && parameters[0].register.length == 2 ?
         function(parameters, operands) {
-          parameters[0].set(operands, X.Utils.wrap16(parameters[0].get(operands) - 1));      
+          parameters[0].set(operands, X.Utils.wrap16(parameters[0].get(operands) - 1));
         } :
         function(parameters, operands) {
           var x = parameters[0].set(operands, X.Utils.wrap8(parameters[0].get(operands) - 1));
@@ -316,19 +316,19 @@ X.InstructionSet = (function() {
           X.CPU.halfcarry = (x & 0xF) == 0xF;
         };
     },
-    
+
     DI: function(parameters) {
       return function(parameters, operands) {
         X.CPU.interrupt_master_enable = false; // TODO disable 1 inst after (GB man p.98)
       };
     },
-    
+
     EI: function(parameters) {
-      return function(parameters, operands) {        
+      return function(parameters, operands) {
         X.CPU.interrupt_master_enable = true; // TODO same
       };
     },
-    
+
     HALT: function(parameters) {
       return function(parameters, operands) {
         X.CPU.halted = true;
@@ -338,16 +338,16 @@ X.InstructionSet = (function() {
     INC: function(parameters) {
       return parameters[0] instanceof RegisterParameter && parameters[0].register.length == 2 ?
         function(parameters, operands) {
-          var x = parameters[0].set(operands, X.Utils.wrap16(parameters[0].get(operands) + 1));      
+          var x = parameters[0].set(operands, X.Utils.wrap16(parameters[0].get(operands) + 1));
         } :
         function(parameters, operands) {
-          var x = parameters[0].set(operands, X.Utils.wrap8(parameters[0].get(operands) + 1));  
+          var x = parameters[0].set(operands, X.Utils.wrap8(parameters[0].get(operands) + 1));
           X.CPU.zero = x == 0;
           X.CPU.addsub = false;
           X.CPU.halfcarry = (x & 0xF) == 0;
         };
     },
-    
+
     JP: function(parameters) {
       return parameters.length == 1 ?
         function(parameters, operands) {
@@ -360,7 +360,7 @@ X.InstructionSet = (function() {
           }
         };
     },
-    
+
     JR: function(parameters) {
       return parameters.length == 1 ?
         function(parameters, operands) {
@@ -388,7 +388,7 @@ X.InstructionSet = (function() {
         X.Memory.w(address + 1, X.Utils.hi(X.CPU.SP));
       };
     },
-    
+
     LDD: function(parameters) {
       var ld = this.LD(parameters);
       return function(parameters, operands) {
@@ -396,7 +396,7 @@ X.InstructionSet = (function() {
         X.CPU.HL = X.Utils.wrap16(X.CPU.HL - 1);
       };
     },
-    
+
     LDHL: function(parameters) {
       return function(parameters, operands) {
         var a = X.CPU.SP;
@@ -417,11 +417,11 @@ X.InstructionSet = (function() {
         X.CPU.HL = X.Utils.wrap16(X.CPU.HL + 1);
       };
     },
-    
+
     NOP: function(parameters) {
       return function(parameters, operands) {};
     },
-    
+
     OR: function(parameters) {
       return function(parameters, operands) {
         X.CPU.A |= parameters[0].get(operands);
@@ -431,7 +431,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = false;
       };
     },
-    
+
     POP: function(parameters) {
       return function(parameters, operands) {
         var lo = X.CPU.pop();
@@ -439,7 +439,7 @@ X.InstructionSet = (function() {
         parameters[0].set(operands, X.Utils.hilo(hi, lo));
       };
     },
-    
+
     PUSH: function(parameters) {
       return function(parameters, operands) {
         var pair = parameters[0].get(operands);
@@ -447,13 +447,13 @@ X.InstructionSet = (function() {
         X.CPU.push(X.Utils.lo(pair));
       };
     },
-    
+
     RES: function(parameters) {
       return function(parameters, operands) {
         parameters[1].set(operands, parameters[1].get(operands) & ~(1 << parameters[0].get(operands)));
       };
     },
-    
+
     RET: function(parameters) {
       return parameters.length == 1 ?
         function(parameters, operands) {
@@ -466,14 +466,14 @@ X.InstructionSet = (function() {
           X.CPU.ret();
         };
     },
-    
+
     RETI: function(parameters) {
       return function(parameters, operands) {
         X.CPU.ret();
         X.CPU.interrupt_master_enable = true;
       };
     },
-    
+
     RL: function(parameters) {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
@@ -486,7 +486,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit7;
       };
     },
-    
+
     RLA: function(parameters) {
       return function(parameters, operands) {
         var bit7 = X.Utils.bit(X.CPU.A, 7);
@@ -497,7 +497,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit7;
       };
     },
-    
+
     RLC: function(parameters) {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
@@ -510,7 +510,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit7;
       };
     },
-    
+
     RLCA: function(parameters) {
       return function(parameters, operands) {
         var bit7 = X.Utils.bit(X.CPU.A, 7);
@@ -521,7 +521,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit7;
       };
     },
-    
+
     RR: function(parameters) {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
@@ -534,7 +534,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit0;
       };
     },
-    
+
     RRA: function(parameters) {
       return function(parameters, operands) {
         var bit0 = X.Utils.bit(X.CPU.A, 0);
@@ -545,7 +545,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit0;
       };
     },
-    
+
     RRC: function(parameters) {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
@@ -558,7 +558,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit0;
       };
     },
-    
+
     RRCA: function(parameters) {
       return function(parameters, operands) {
         var bit0 = X.Utils.bit(X.CPU.A, 0);
@@ -569,13 +569,13 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit0;
       };
     },
-    
+
     RST: function(parameters) {
       return function(parameters, operands) {
         X.CPU.call(parameters[0].get(operands));
       };
     },
-    
+
     SBC: function(parameters) {
       return function(parameters, operands) {
         var a = X.CPU.A;
@@ -588,7 +588,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = x < 0;
       };
     },
-    
+
     SCF: function(parameters) {
       return function(parameters, operands) {
         X.CPU.addsub = false;
@@ -596,13 +596,13 @@ X.InstructionSet = (function() {
         X.CPU.carry = true;
       };
     },
-    
+
     SET: function(parameters) {
       return function(parameters, operands) {
         parameters[1].set(operands, parameters[1].get(operands) | 1 << parameters[0].get(operands));
       };
     },
-    
+
     SLA: function(parameters) {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
@@ -615,7 +615,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit7;
       };
     },
-    
+
     SRA: function(parameters) {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
@@ -629,7 +629,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit0;
       };
     },
-    
+
     SRL: function(parameters) {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
@@ -642,14 +642,14 @@ X.InstructionSet = (function() {
         X.CPU.carry = bit0;
       };
     },
-    
+
     STOP: function(parameters) {
       return function(parameters, operands) {
         console.log('STOP');
         X.CPU.stopped = true;
       };
     },
-    
+
     SUB: function(parameters) {
       return function(parameters, operands) {
         var a = X.CPU.A;
@@ -661,7 +661,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = a < b;
       };
     },
-    
+
     SWAP: function(parameters) {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
@@ -673,7 +673,7 @@ X.InstructionSet = (function() {
         X.CPU.carry = false;
       };
     },
-    
+
     XOR: function(parameters) {
       return function(parameters, operands) {
         X.CPU.A ^= parameters[0].get(operands);
@@ -682,7 +682,7 @@ X.InstructionSet = (function() {
         X.CPU.halfcarry = false;
         X.CPU.carry = false;
       };
-    }    
+    }
   };
 
   return {
@@ -690,7 +690,7 @@ X.InstructionSet = (function() {
     /**
       *
       */
-      
+
     generate: function() {
 
       return _.map(opcode_specs, function(specs, opcode) {
