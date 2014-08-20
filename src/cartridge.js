@@ -189,7 +189,6 @@ X.Cartridge = (function() {
     },
 
     w: function(address, value) {
-
       return this.mbc.w(address, value);
     }
 

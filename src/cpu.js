@@ -36,8 +36,8 @@ X.CPU = (function() {
 
     get DIV() { return X.Memory.r(0xFF04); }, set DIV(x) { X.Memory.w(0xFF04, x); },
     get TIMA() { return X.Memory.r(0xFF05); }, set TIMA(x) { X.Memory.w(0xFF05, x); },
-    get TMA() { return X.Memory.r(0xFF06); }, set TMA(x) { X.Memory.w(0xFF06, x); },
-    get TAC() { return X.Memory.r(0xFF07); }, set TAC(x) { X.Memory.w(0xFF07, x); },
+    get TMA() { return X.Memory.r(0xFF06); },
+    get TAC() { return X.Memory.r(0xFF07); },
     get timer_enable() { return X.Utils.bit(this.TAC, 2); },
     get timer_clock() { return this.TAC & 0x3; },
 
@@ -52,11 +52,14 @@ X.CPU = (function() {
       if (this.timer_enable) {
         TIMA_accumulator += cycles;
         if (TIMA_accumulator >= timer_clocks[this.timer_clock]) {
-          this.TIMA += 1;
+          var tima = this.TIMA + 1;
           TIMA_accumulator -= timer_clocks[this.timer_clock];
-          if (this.TIMA > 0xFF) {
+          if (tima > 0xFF) {
             this.request_interrupt(2);
             this.TIMA = this.TMA;
+          }
+          else {
+            this.TIMA = tima;
           }
         }
       }

@@ -4,11 +4,13 @@ X.Video = (function() {
 
   'use strict';
 
-  var canvas;
+  var vram, vram_data;
+  var oam, oam_data;
 
-  var background_maps;
   var tile_data;
-  var oam;
+  var background_maps;
+
+  var canvas;
 
   var vblank = function() {
     X.CPU.request_interrupt(0);
@@ -61,45 +63,78 @@ X.Video = (function() {
       [0, 0, 0, 0xFF]
     ],
 
+    init: function() {
+
+      X.Renderer.init();
+
+      //
+
+      vram = new ArrayBuffer(0x2000);
+      vram_data = new Uint8Array(vram);
+
+      oam = new ArrayBuffer(0xA0);
+      oam_data = new Uint8Array(oam);
+
+      tile_data = new Uint8Array(vram, 0, 0x1800);
+      background_maps = new Uint8Array(vram, 0x1800, 0x800);
+
+      // Switch to fullscreen when the canvas is clicked
+      var canvas_dom = document.querySelector('section#game canvas');
+      canvas_dom.addEventListener('click', function(event) {
+        canvas_dom.webkitRequestFullScreen();
+      });
+      canvas = canvas_dom.getContext('2d');
+
+      //
+
+      for (var t = 0, l = this.cached_tiles.length; t < l; ++t) {
+        var pixels = new Array(64);
+        X.Utils.fill(pixels);
+        this.cached_tiles[t] = pixels;
+      }
+    },
+
+    reset: function() {
+
+      X.Renderer.reset();
+
+      // Cache default palettes to begin with
+      _.each(['bg', 'obj_0', 'obj_1'], function(palette) {
+        this.cached_palettes[palette] = [X.Video.colors[0], X.Video.colors[1], X.Video.colors[2], X.Video.colors[3]];
+      }, this);
+
+      this.mode = 2; // Really??
+    },
+
     /**
       * Memory mapping
       */
 
     r: function(address) {
 
-      // Tile data
-      if (address < 0x9800) {
-        return tile_data[address - 0x8000];
-      }
-
-      // Background maps
-      else if (address < 0xA000) {
-        return background_maps[address - 0x9800];
+      // VRAM
+      if (address < 0xA000) {
+        return vram_data[address - 0x8000];
       }
 
       // OAM
       else {
-        return oam[address - 0xFE00];
+        return oam_data[address - 0xFE00];
       }
     },
 
     w: function(address, value) {
 
-      // Tile data
-      if (address < 0x9800) {
-        tile_data[address - 0x8000] = value;
-        this.update_cached_tile(address - 0x8000);
-        return value
-      }
-
-      // Background maps
-      else if (address < 0xA000) {
-        return background_maps[address - 0x9800] = value;
+      // VRAM
+      if (address < 0xA000) {
+        vram_data[address - 0x8000] = value;
+        if (address < 0x9800)
+          this.update_cached_tile(address - 0x8000);
       }
 
       // OAM
       else {
-        return oam[address - 0xFE00] = value;
+        oam_data[address - 0xFE00] = value;
       }
     },
 
@@ -108,7 +143,7 @@ X.Video = (function() {
       var starting_address = value * 0x100;
 
       for (var i = 0; i < 160; ++i) {
-        oam[i] = X.Memory.r(starting_address + i);
+        oam_data[i] = X.Memory.r(starting_address + i);
       }
     },
 
@@ -135,36 +170,29 @@ X.Video = (function() {
 
     },
 
-    init: function() {
+    /**
+      *
+      */
 
-      X.Renderer.init();
-
-      var canvas_dom = document.querySelector('section#game canvas');
-      canvas_dom.addEventListener('click', function(event) {
-        canvas_dom.webkitRequestFullScreen();
-      });
-      canvas = canvas_dom.getContext('2d');
-
-      background_maps = new Array(2048);
-      tile_data = new Array(6144);
-      oam = new Array(160);
-
-      for (var t = 0, l = this.cached_tiles.length; t < l; ++t) {
-        var pixels = new Array(64);
-        X.Utils.fill(pixels);
-        this.cached_tiles[t] = pixels;
-      }
+    cached_palettes: {
+      bg: [],
+      obj_0: [],
+      obj_1: []
     },
 
-    reset: function() {
+    update_cached_palette: function(address, value) {
 
-      X.Renderer.reset();
+      var palette;
+      switch (address) {
+        case 0xFF47: palette = 'bg'; break;
+        case 0xFF48: palette = 'obj_0'; break;
+        case 0xFF49: palette = 'obj_1'; break;
+      }
 
-      X.Utils.fill(background_maps);
-      X.Utils.fill(tile_data);
-      X.Utils.fill(oam);
-
-      this.mode = 2; // Really??
+      for (var b = 0; b < 4; ++b) {
+        var color = this.colors[X.Utils.bit(value, b*2) | X.Utils.bit(value, b*2 + 1) << 1];
+        this.cached_palettes[palette][b] = [color[0], color[1], color[2], color[3]];
+      }
     },
 
     scan: function(cycles) {
@@ -269,14 +297,6 @@ X.Renderer = (function() {
   var canvas;
   var buffer;
 
-  // Cached palettes:
-
-  var cached_palettes = {
-    bg: [],
-    obj_0: [],
-    obj_1: []
-  };
-
   return {
 
     init: function() {
@@ -289,30 +309,10 @@ X.Renderer = (function() {
       canvas = canvas_dom.getContext('2d', { alpha: false });
 
       buffer = canvas.createImageData(canvas_dom.width, canvas_dom.height);
-
-      // Maintain cached palettes for faster access
-
-      var palettes = ['bg', 'obj_0', 'obj_1'];
-
-      _.each(palettes, function(palette, index) {
-        X.Memory.watch(0xFF47 + index, function(prop, old_val, new_val) {
-          for (var b = 0; b < 4; ++b) {
-            var color = X.Video.colors[X.Utils.bit(new_val, b*2) | X.Utils.bit(new_val, b*2 + 1) << 1];
-            cached_palettes[palette][b] = [color[0], color[1], color[2], color[3]];
-          }
-        });
-      });
     },
 
     reset: function() {
 
-      // Cache default palettes to begin with
-
-      var palettes = ['bg', 'obj_0', 'obj_1'];
-
-      _.each(palettes, function(palette, index) {
-        cached_palettes[palette] = [X.Video.colors[0], X.Video.colors[1], X.Video.colors[2], X.Video.colors[3]];
-      });
     },
 
     scan_background: function(y) {
@@ -336,7 +336,7 @@ X.Renderer = (function() {
 
         // Fetch the pixel color
 
-        var color = cached_palettes.bg[tile[py*8 + px]];
+        var color = X.Video.cached_palettes.bg[tile[py*8 + px]];
 
         // Draw the pixel
 
@@ -371,7 +371,7 @@ X.Renderer = (function() {
 
         // Fetch the pixel color
 
-        var color = cached_palettes.bg[tile[py*8 + px]];
+        var color = X.Video.cached_palettes.bg[tile[py*8 + px]];
 
         // Draw the pixel
 
@@ -399,7 +399,7 @@ X.Renderer = (function() {
         var obj_above = X.Utils.bit(attributes, 7);
         var flip_y = X.Utils.bit(attributes, 6);
         var flip_x = X.Utils.bit(attributes, 5);
-        var palette = X.Utils.bit(attributes, 4) ? cached_palettes.obj_1 : cached_palettes.obj_0;
+        var palette = X.Utils.bit(attributes, 4) ? X.Video.cached_palettes.obj_1 : X.Video.cached_palettes.obj_0;
 
         var tile_size = X.Video.obj_size == 8 ? 1 : 2;
 
@@ -454,7 +454,7 @@ X.Renderer = (function() {
         for (var px = 0; px < 8; ++px) {
 
           var color_index = tile[py*8 + px];
-          var color = cached_palettes.bg[color_index];
+          var color = X.Video.cached_palettes.bg[color_index];
 
           var index = (py*8 + px) * 4;
           buffer.data[index] = color[0];

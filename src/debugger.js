@@ -90,8 +90,6 @@ X.Debugger = (function() {
       memory_window_start = Math.floor(parseInt(input.value, 16) / 16) * 16;
       update_memory();
     });
-
-    update_memory();
   };
 
   var update_memory = function() {

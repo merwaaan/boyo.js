@@ -4,58 +4,35 @@ X.Memory = (function() {
 
   'use strict';
 
-  var data = new Array(0x10000);
-  X.Utils.fill(data);
+  var mapping = [];
+
+  var map = function(address, ref) {
+    mapping[address] = ref;
+  };
+
+  var map_range = function(start_address, end_address, ref) {
+    for (var a = start_address; a <= end_address; ++a)
+      mapping[a] = ref;
+  };
+
+  var wram, wram_data;
+  var nouse, nouse_data;
+  var io, io_data;
+  var hram, hram_data;
 
   var bootstrap = [0x31, 0xfe, 0xff, 0xaf, 0x21, 0xff, 0x9f, 0x32, 0xcb, 0x7c, 0x20, 0xfb, 0x21, 0x26, 0xff, 0xe, 0x11, 0x3e, 0x80, 0x32, 0xe2, 0xc, 0x3e, 0xf3, 0xe2, 0x32, 0x3e, 0x77, 0x77, 0x3e, 0xfc, 0xe0, 0x47, 0x11, 0x4, 0x1, 0x21, 0x10, 0x80, 0x1a, 0xcd, 0x95, 0x0, 0xcd, 0x96, 0x0, 0x13, 0x7b, 0xfe, 0x34, 0x20, 0xf3, 0x11, 0xd8, 0x0, 0x6, 0x8, 0x1a, 0x13, 0x22, 0x23, 0x5, 0x20, 0xf9, 0x3e, 0x19, 0xea, 0x10, 0x99, 0x21, 0x2f, 0x99, 0xe, 0xc, 0x3d, 0x28, 0x8, 0x32, 0xd, 0x20, 0xf9, 0x2e, 0xf, 0x18, 0xf3, 0x67, 0x3e, 0x64, 0x57, 0xe0, 0x42, 0x3e, 0x91, 0xe0, 0x40, 0x4, 0x1e, 0x2, 0xe, 0xc, 0xf0, 0x44, 0xfe, 0x90, 0x20, 0xfa, 0xd, 0x20, 0xf7, 0x1d, 0x20, 0xf2, 0xe, 0x13, 0x24, 0x7c, 0x1e, 0x83, 0xfe, 0x62, 0x28, 0x6, 0x1e, 0xc1, 0xfe, 0x64, 0x20, 0x6, 0x7b, 0xe2, 0xc, 0x3e, 0x87, 0xe2, 0xf0, 0x42, 0x90, 0xe0, 0x42, 0x15, 0x20, 0xd2, 0x5, 0x20, 0x4f, 0x16, 0x20, 0x18, 0xcb, 0x4f, 0x6, 0x4, 0xc5, 0xcb, 0x11, 0x17, 0xc1, 0xcb, 0x11, 0x17, 0x5, 0x20, 0xf5, 0x22, 0x23, 0x22, 0x23, 0xc9, 0xce, 0xed, 0x66, 0x66, 0xcc, 0xd, 0x0, 0xb, 0x3, 0x73, 0x0, 0x83, 0x0, 0xc, 0x0, 0xd, 0x0, 0x8, 0x11, 0x1f, 0x88, 0x89, 0x0, 0xe, 0xdc, 0xcc, 0x6e, 0xe6, 0xdd, 0xdd, 0xd9, 0x99, 0xbb, 0xbb, 0x67, 0x63, 0x6e, 0xe, 0xec, 0xcc, 0xdd, 0xdc, 0x99, 0x9f, 0xbb, 0xb9, 0x33, 0x3e, 0x3c, 0x42, 0xb9, 0xa5, 0xb9, 0xa5, 0x42, 0x3c, 0x21, 0x4, 0x1, 0x11, 0xa8, 0x0, 0x1a, 0x13, 0xbe, 0x20, 0xfe, 0x23, 0x7d, 0xfe, 0x34, 0x20, 0xf5, 0x6, 0x19, 0x78, 0x86, 0x23, 0x5, 0x20, 0xfb, 0x86, 0x20, 0xfe, 0x3e, 0x1, 0xe0, 0x50];
   var bootstraped = false;
+  // TODO dump reset state instead
 
   return {
 
     r: function(address) {
 
-      // ROM
-      if (address < 0x8000) {
+      if (mapping[address] && mapping[address].r)
+        return mapping[address].r(address);
 
-        if (!bootstraped && address < 0x100)
-          return bootstrap[address];
-        else if (address == 0x100)
-          bootstraped = true;
-
-        return X.Cartridge.r(address);
-    	}
-
-      // VRAM
-      else if (address < 0xA000) {
-        return X.Video.r(address);
-      }
-
-      // RAM
-      else if (address < 0xC000) {
-        return X.Cartridge.r(address);
-      }
-
-      // RAM echo
-      else if (address < 0xDFFF) {
-        //console.log('echo!');
-      }
-
-      // OAM
-      else if (address >= 0xFE00 && address < 0xFEA0) {
-        return X.Video.r(address);
-      }
-
-      // Joypad
-      else if (address == 0xFF00) {
-        return X.Joypad.r();
-      }
-
-      // Sound registers
-      else if (address >= 0xFF10 && address <= 0xFF3F) {
-        return X.Audio.r(address);
-      }
-
-      return data[address];
+      console.error('Unmapped address (r): ' + X.Utils.hex16(address));
+      return 0;
     },
 
     r_: function(address, length) {
@@ -71,61 +48,51 @@ X.Memory = (function() {
 
     w: function(address, value) {
 
-      // ROM
-      if (address < 0x8000) {
-        return X.Cartridge.w(address, value);
-      }
-
-      // VRAM
-      else if (address < 0xA000) {
-        return X.Video.w(address, value);
-      }
-
-      // RAM
-      else if (address < 0xC000) {
-        return X.Cartridge.w(address, value);
-      }
-
-      // OAM
-      else if (address >= 0xFE00 && address < 0xFEA0) {
-        return X.Video.w(address, value);
-      }
-
-      // Joypad
-      else if (address == 0xFF00) {
-        return X.Joypad.w(value);
-      }
-
-      // DIV reset
-      else if (address == 0xFF04) {
-        data[address] = 0;
-      }
-
-      // Sound registers
-      else if (address >= 0xFF10 && address <= 0xFF3F) {
-        return X.Audio.w(address, value);
-      }
-
-      // DMA transfers
-      else if (address == 0xFF46) {
-        X.Video.dma_transfer(value);
-      }
-
-      return data[address] = value;
-    },
-
-    watch: function(address, handler) {
-
-      data.watch(address, handler); // XXX only work on non-mapped areas
+      if (mapping[address] && mapping[address].w)
+        mapping[address].w(address, value);
+      else
+        console.error('Unmapped address (w): ' + X.Utils.hex16(address));
     },
 
     init: function() {
 
+      //
+
+      wram = new ArrayBuffer(0x2000);
+      wram_data = new Uint8Array(wram);
+
+      nouse = new ArrayBuffer(0x5F);
+      nouse_data = new Uint8Array(nouse);
+
+      io = new ArrayBuffer(0x80);
+      io_data = new Uint8Array(io);
+
+      hram = new ArrayBuffer(0x80);
+      hram_data = new Uint8Array(hram);
+
+      // Map main ranges + specific registers
+
+      map_range(0x0000, 0x7FFF, X.Cartridge); // ROM
+      map_range(0x8000, 0x9FFF, X.Video); // VRAM
+      map_range(0xA000, 0xBFFF, X.Cartridge); // RAM
+      map_range(0xC000, 0xDFFF, {r: function(a){return wram_data[a-0xC000]}, w: function(a,v){wram_data[a-0xC000]=v}}); // WRAM
+      map_range(0xE000, 0xFDFF, {r: function(a){return wram_data[a-0xC000]}, w: function(a,v){wram_data[a-0xC000]=v}}); // WRAM echo
+      map_range(0xFE00, 0xFE9F, X.Video); // OAM
+      map_range(0xFEA0, 0xFEFF, {r: function(a){return nouse_data[a-0xFEA0]}, w: function(a,v){console.log('echo');nouse_data[a-0xFEA0]=v}}); // Not used (supposedly)
+      map_range(0xFF00, 0xFF7F, {r: function(a){return io_data[a-0xFF00]}, w: function(a,v){io_data[a-0xFF00]=v}}); // IO
+      map_range(0xFF80, 0xFFFF, {r: function(a){return hram_data[a-0xFF80]}, w: function(a,v){hram_data[a-0xFF80]=v}}); // HRAM
+
+      map(0xFF00, X.Joypad); // Joypad
+      map_range(0xFF10, 0xFF3F, X.Audio); // Audio
+      map(0xFF46, {w: function(a,v){X.Video.dma_transfer(v)}}); // DMA transfer
+      map_range(0xFF47, 0xFF49, {r: function(a){return io_data[a-0xFF00]}, w: function(a,v){X.Video.update_cached_palette(a,v); io_data[a-0xFF00]=v;}}); // Palettes
     },
 
     reset: function() {
 
-      bootstraped = false;
+      // Map bootstrap sequence (unmapped when 0x100 is read)
+      map_range(0x0000, 0x00FF, {r: function(a){return bootstrap[a]}});
+      map(0x0100, {r: function(a){map_range(0x0000, 0x00FF, X.Cartridge); return X.Cartridge.r(a);}});
     }
 
   };

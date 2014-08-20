@@ -59,7 +59,7 @@ X.InstructionSet = (function() {
   function RegisterParameter(register) { this.register = register; }
   X.Utils.inherit(RegisterParameter, Parameter);
   RegisterParameter.prototype.get = function() { return X.CPU[this.register]; };
-  RegisterParameter.prototype.set = function(operands, value) { return X.CPU[this.register] = value; };
+  RegisterParameter.prototype.set = function(operands, value) { X.CPU[this.register] = value; };
   RegisterParameter.prototype.to_string = function() { return '[' + this.constructor.name + ', ' + this.register + ']'; };
 
   function Immediate8BitParameter() {}
@@ -88,7 +88,7 @@ X.InstructionSet = (function() {
   function PointerParameter(parameter) { this.parameter = parameter; }
   X.Utils.inherit(PointerParameter, Parameter);
   PointerParameter.prototype.get = function(operands) { return X.Memory.r(this.parameter.get(operands)); };
-  PointerParameter.prototype.set = function(operands, value) { return X.Memory.w(this.parameter.get(operands), value); };
+  PointerParameter.prototype.set = function(operands, value) { X.Memory.w(this.parameter.get(operands), value); };
   PointerParameter.prototype.to_string = function() { return '[' + this.constructor.name + ' -> ' + this.parameter.to_string() + ']'; };
 
   /**
@@ -310,7 +310,8 @@ X.InstructionSet = (function() {
           parameters[0].set(operands, parameters[0].get(operands) - 1 & 0xFFFF);
         } :
         function(parameters, operands) {
-          var x = parameters[0].set(operands, parameters[0].get(operands) - 1 & 0xFF);
+          var x = parameters[0].get(operands) - 1 & 0xFF;
+          parameters[0].set(operands, x);
           X.CPU.zero = x == 0;
           X.CPU.addsub = true;
           X.CPU.halfcarry = (x & 0xF) == 0xF;
@@ -338,10 +339,11 @@ X.InstructionSet = (function() {
     INC: function(parameters) {
       return parameters[0] instanceof RegisterParameter && parameters[0].register.length == 2 ?
         function(parameters, operands) {
-          var x = parameters[0].set(operands, parameters[0].get(operands) + 1 & 0xFFFF);
+          parameters[0].set(operands, parameters[0].get(operands) + 1 & 0xFFFF);
         } :
         function(parameters, operands) {
-          var x = parameters[0].set(operands, parameters[0].get(operands) + 1 & 0xFF);
+          var x = parameters[0].get(operands) + 1 & 0xFF;
+          parameters[0].set(operands, x);
           X.CPU.zero = x == 0;
           X.CPU.addsub = false;
           X.CPU.halfcarry = (x & 0xF) == 0;

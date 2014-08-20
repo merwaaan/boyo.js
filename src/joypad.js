@@ -59,9 +59,8 @@ X.Joypad = (function() {
       return to_byte();
     },
 
-    w: function(value) {
+    w: function(address, value) {
       selection = value & 0x30;
-      return to_byte();
     }
 
   };
