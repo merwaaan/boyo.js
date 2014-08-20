@@ -45,7 +45,7 @@ X.CPU = (function() {
 
       DIV_accumulator += cycles;
       if (DIV_accumulator > 0xFF) {
-        this.DIV = X.Utils.wrap8(this.DIV + 1);
+        this.DIV = this.DIV + 1 & 0xFF;
         DIV_accumulator -= 0xFF;
       }
 
@@ -116,13 +116,13 @@ X.CPU = (function() {
       */
 
     push: function(value) {
-      this.SP = X.Utils.wrap16(this.SP - 1);
+      this.SP = this.SP - 1 & 0xFFFF;
       X.Memory.w(this.SP, value);
     },
 
     pop: function() {
       var value = X.Memory.r(this.SP);
-      this.SP = X.Utils.wrap16(this.SP + 1);
+      this.SP = this.SP + 1 & 0xFFFF;
       return value;
     },
 

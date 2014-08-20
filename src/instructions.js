@@ -30,7 +30,7 @@ X.InstructionSet = (function() {
 
   Instruction.prototype.execute = function(operands) {
 
-    X.CPU.PC = X.Utils.wrap16(X.CPU.PC + this.bytes);
+    X.CPU.PC = X.CPU.PC + this.bytes & 0xFFFF;
 
     var conditional_result = this.procedure(this.parameters, operands);
 
@@ -174,7 +174,7 @@ X.InstructionSet = (function() {
         var a = X.CPU.A;
         var b = parameters[1].get(operands);
         var x = a + b + X.CPU.carry;
-        X.CPU.A = X.Utils.wrap8(x);
+        X.CPU.A = x & 0xFF;
         X.CPU.zero = X.CPU.A == 0;
         X.CPU.addsub = false;
         X.CPU.halfcarry = (a & 0xF) + (b & 0xF) + (X.CPU.carry & 0xF) > 0xF;
@@ -190,7 +190,7 @@ X.InstructionSet = (function() {
           var a = X.CPU.HL;
           var b = parameters[1].get(operands);
           var x = a + b;
-          X.CPU.HL = X.Utils.wrap16(x);
+          X.CPU.HL = x & 0xFFFF;
           X.CPU.addsub = false;
           X.CPU.halfcarry = (a & 0xFFF) + (b & 0xFFF) > 0xFFF;
           X.CPU.carry = x > 0xFFFF;
@@ -201,7 +201,7 @@ X.InstructionSet = (function() {
           var a = X.CPU.SP;
           var b = X.Utils.signed(parameters[1].get(operands));
           var x = a + b;
-          X.CPU.SP = X.Utils.wrap16(x);
+          X.CPU.SP = x & 0xFFFF;
           X.CPU.zero = false;
           X.CPU.addsub = false;
           X.CPU.halfcarry = (a & 0xF) + (b & 0xF) > 0xF;
@@ -213,7 +213,7 @@ X.InstructionSet = (function() {
           var a = X.CPU.A;
           var b = parameters[1].get(operands);
           var x = a + b;
-          X.CPU.A = X.Utils.wrap8(x);
+          X.CPU.A = x & 0xFF;
           X.CPU.zero = X.CPU.A == 0;
           X.CPU.addsub = false;
           X.CPU.halfcarry = (a & 0xF) + (b & 0xF) > 0xF;
@@ -297,7 +297,7 @@ X.InstructionSet = (function() {
         }
         if (a > 0xFF)
           X.CPU.carry = true;
-        X.CPU.A = X.Utils.wrap8(a);
+        X.CPU.A = a & 0xFF;
         X.CPU.zero = X.CPU.A == 0;
         X.CPU.halfcarry = false;
         // http://www.youtube.com/watch?v=rJp86_tj9KQ
@@ -307,10 +307,10 @@ X.InstructionSet = (function() {
     DEC: function(parameters) {
       return parameters[0] instanceof RegisterParameter && parameters[0].register.length == 2 ?
         function(parameters, operands) {
-          parameters[0].set(operands, X.Utils.wrap16(parameters[0].get(operands) - 1));
+          parameters[0].set(operands, parameters[0].get(operands) - 1 & 0xFFFF);
         } :
         function(parameters, operands) {
-          var x = parameters[0].set(operands, X.Utils.wrap8(parameters[0].get(operands) - 1));
+          var x = parameters[0].set(operands, parameters[0].get(operands) - 1 & 0xFF);
           X.CPU.zero = x == 0;
           X.CPU.addsub = true;
           X.CPU.halfcarry = (x & 0xF) == 0xF;
@@ -338,10 +338,10 @@ X.InstructionSet = (function() {
     INC: function(parameters) {
       return parameters[0] instanceof RegisterParameter && parameters[0].register.length == 2 ?
         function(parameters, operands) {
-          var x = parameters[0].set(operands, X.Utils.wrap16(parameters[0].get(operands) + 1));
+          var x = parameters[0].set(operands, parameters[0].get(operands) + 1 & 0xFFFF);
         } :
         function(parameters, operands) {
-          var x = parameters[0].set(operands, X.Utils.wrap8(parameters[0].get(operands) + 1));
+          var x = parameters[0].set(operands, parameters[0].get(operands) + 1 & 0xFF);
           X.CPU.zero = x == 0;
           X.CPU.addsub = false;
           X.CPU.halfcarry = (x & 0xF) == 0;
@@ -393,7 +393,7 @@ X.InstructionSet = (function() {
       var ld = this.LD(parameters);
       return function(parameters, operands) {
         ld(parameters, operands);
-        X.CPU.HL = X.Utils.wrap16(X.CPU.HL - 1);
+        X.CPU.HL = X.CPU.HL - 1 & 0xFFFF;
       };
     },
 
@@ -402,7 +402,7 @@ X.InstructionSet = (function() {
         var a = X.CPU.SP;
         var b = X.Utils.signed(parameters[1].get(operands));
         var x = a + b;
-        X.CPU.HL = X.Utils.wrap16(x);
+        X.CPU.HL = x & 0xFFFF;
         X.CPU.zero = false;
         X.CPU.addsub = false;
         X.CPU.halfcarry = (a & 0xF) + (b & 0xF) > 0xF;
@@ -414,7 +414,7 @@ X.InstructionSet = (function() {
       var ld = this.LD(parameters);
       return function(parameters, operands) {
         ld(parameters, operands);
-        X.CPU.HL = X.Utils.wrap16(X.CPU.HL + 1);
+        X.CPU.HL = X.CPU.HL + 1 & 0xFFFF;
       };
     },
 
@@ -478,7 +478,7 @@ X.InstructionSet = (function() {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
         var bit7 = X.Utils.bit(x, 7);
-        x = X.Utils.wrap8(x << 1 | X.CPU.carry);
+        x = (x << 1 | X.CPU.carry) & 0xFF;
         parameters[0].set(operands, x);
         X.CPU.zero = x == 0;
         X.CPU.addsub = false;
@@ -490,7 +490,7 @@ X.InstructionSet = (function() {
     RLA: function(parameters) {
       return function(parameters, operands) {
         var bit7 = X.Utils.bit(X.CPU.A, 7);
-        X.CPU.A = X.Utils.wrap8(X.CPU.A << 1 | X.CPU.carry);
+        X.CPU.A = (X.CPU.A << 1 | X.CPU.carry) & 0xFF;
         X.CPU.zero = false;
         X.CPU.addsub = false;
         X.CPU.halfcarry = false;
@@ -502,7 +502,7 @@ X.InstructionSet = (function() {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
         var bit7 = X.Utils.bit(x, 7);
-        x = X.Utils.wrap8(x << 1 | bit7);
+        x = (x << 1 | bit7) & 0xFF;
         parameters[0].set(operands, x);
         X.CPU.zero = x == 0;
         X.CPU.addsub = false;
@@ -514,7 +514,7 @@ X.InstructionSet = (function() {
     RLCA: function(parameters) {
       return function(parameters, operands) {
         var bit7 = X.Utils.bit(X.CPU.A, 7);
-        X.CPU.A = X.Utils.wrap8(X.CPU.A << 1 | bit7);
+        X.CPU.A = (X.CPU.A << 1 | bit7) & 0xFF;
         X.CPU.zero = false;
         X.CPU.addsub = false;
         X.CPU.halfcarry = false;
@@ -581,7 +581,7 @@ X.InstructionSet = (function() {
         var a = X.CPU.A;
         var b = parameters[1].get(operands);
         var x = a - b - X.CPU.carry;
-        X.CPU.A = X.Utils.wrap8(x);
+        X.CPU.A = x & 0xFF;
         X.CPU.zero = X.CPU.A == 0;
         X.CPU.addsub = true;
         X.CPU.halfcarry = (a & 0xF) - (b & 0xF) - (X.CPU.carry & 0xF) < 0;
@@ -607,7 +607,7 @@ X.InstructionSet = (function() {
       return function(parameters, operands) {
         var x = parameters[0].get(operands);
         var bit7 = X.Utils.bit(x, 7);
-        x = X.Utils.wrap8(x << 1);
+        x = x << 1 & 0xFF;
         parameters[0].set(operands, x);
         X.CPU.zero = x == 0;
         X.CPU.addsub = false;
@@ -654,7 +654,7 @@ X.InstructionSet = (function() {
       return function(parameters, operands) {
         var a = X.CPU.A;
         var b = parameters[0].get(operands);
-        X.CPU.A = X.Utils.wrap8(a - b);
+        X.CPU.A = a - b & 0xFF;
         X.CPU.zero = X.CPU.A == 0;
         X.CPU.addsub = true;
         X.CPU.halfcarry = (a & 0xF) < (b & 0xF);

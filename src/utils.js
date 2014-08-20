@@ -20,14 +20,6 @@ X.Utils = (function() {
       return value < 0x80 ? value : value - 0x100;
     },
 
-    wrap8: function(value) {
-      return value & 0xFF;
-    },
-
-    wrap16: function(value) {
-      return value & 0xFFFF;
-    },
-
     hi: function(value) {
       return value >> 8;
     },
