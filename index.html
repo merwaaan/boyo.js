@@ -24,10 +24,9 @@
   <header>
     <h1>Boyo</h1>
     <h2>a Game Boy emulator written in Javascript</h2>
-    <h3><a href="github.com/merwaaan/boyo.js">github</a></h3>
   </header>
 
-  <section id="game">
+  <div id="game">
 
     <canvas width="160" height="144"></canvas>
 
@@ -72,11 +71,17 @@
       </tr>
     </table>
 
-    <section id="error"></section>
+  </div>
+
+  <section id="settings">
+
+    <h3><a href="#settings">Settings</a></h3>
 
   </section>
 
   <section id="debugger">
+
+    <h3><a href="#debugger">Debugger</a></h3>
 
     <section id="buttons">
       <button>Pause</button>
@@ -128,9 +133,25 @@
   </section>
 
   <section id="about">
+
+    <h3><a href="#about">About</a></h3>
+
+    <p>TODO</p>
+
   </section>
 
   <section id="changelog">
+
+    <h3><a href="#changelog">Changelog</a></h3>
+
+    <p>0.2</p>
+    <ul>
+      <li>Sound</li>
+      <li>Battery-backed RAM saved with localStorage</li>
+      <li>TODO more mBCs</li>
+      <li>TODO UI</li>
+    </ul>
+
     <p>0.1</p>
     <ul>
       <li>CPU: instruction set, interrupts, timers</li>
@@ -142,6 +163,7 @@
   </section>
 
   <script>
+    // Initialize Boyo!
     window.addEventListener('load', function() {
       X.GB.init();
     });

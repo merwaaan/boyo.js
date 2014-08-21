@@ -79,12 +79,11 @@ X.Video = (function() {
       background_maps = new Uint8Array(vram, 0x1800, 0x800);
 
       // Switch to fullscreen when the canvas is clicked
-      var canvas_dom = document.querySelector('section#game canvas');
+      var canvas_dom = document.querySelector('div#game canvas');
       canvas_dom.addEventListener('click', function(event) {
         canvas_dom.webkitRequestFullScreen();
       });
       canvas = canvas_dom.getContext('2d');
-
       //
 
       for (var t = 0, l = this.cached_tiles.length; t < l; ++t) {

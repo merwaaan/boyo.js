@@ -1,42 +1,109 @@
+/* Color palette: Still standing @ colourlovers.com */
+
+/* Some nice fonts */
 @import url(http://fonts.googleapis.com/css?family=Pontano+Sans);
 @import url(http://fonts.googleapis.com/css?family=Inconsolata);
 
-* {
-	margin: 0;
-}
+/* Eric Meyer's Reset CSS v2.0 - http://cssreset.com */
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td,article,aside,canvas,details,embed,figure,figcaption,footer,header,hgroup,menu,nav,output,ruby,section,summary,time,mark,audio,video{border:0;font-size:100%;font:inherit;vertical-align:baseline;margin:0;padding:0}article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:none}table{border-collapse:collapse;border-spacing:0}
 
 body  {
 	font-family: "Pontano Sans";
 }
 
+header {
+	padding-left: 1em;
+	padding-top: 1em;
+}
 header h1, header h2, header h3 {
 	display: inline;
-	font-weight: lighter;
+}
+
+header h1 {
+	font-size: 1.5em;
+}
+
+header h2 {
+	font-size: 1em;
+}
+
+header h3 {
+	font-size: 0.8em;
+	color: lightgray;
+}
+
+a {
+	text-decoration: none;
+	color: black;
 }
 
 canvas {
+	image-rendering: -moz-crisp-edges;
+	image-rendering: -o-crisp-edges;
+	image-rendering: -webkit-optimize-contrast;
 	border: 1px solid lightgray;
 }
 
-section#game {
+/* Game */
+
+div#game {
 	text-align: center;
 }
 
-section#game canvas {
+div#game canvas {
+	margin: 3em;
 	background-color: white;
 }
 
-section#game canvas:-webkit-full-screen {
+div#game canvas:-webkit-full-screen {
 	width: 200%;
 }
 
-section#game table {
+div#game table {
 	margin: auto;
-	border-spacing: 2em;
+	margin-bottom: 2em;
 }
+
+div#game table td {
+	padding: 0 2em;
+}
+
+/* Accordion */
+
+body > section {
+	width: 70%;
+	height: 2em;
+	overflow: hidden;
+	margin: auto;
+}
+
+body > section h3 {
+	line-height: 2em;
+	padding-left: 0.5em;
+}
+
+body > section:target {
+	height: auto;
+}
+
+/* Settings */
+
+section#settings {
+	background-color: gray;
+}
+
+section#settings h3 {
+	background-color: #75D9B4;
+}
+
+/* Debugger */
 
 section#debugger {
 	font-family: "Inconsolata";
+}
+
+section#debugger h3 {
+	background-color: #F2896F;
 }
 
 section#debugger table {
@@ -79,4 +146,24 @@ section#video canvas#tiles, section#video canvas#background, section#video table
 
 section#video table#oam span {
 	padding-left: 0.2em;
+}
+
+/* About */
+
+section#about h3 {
+	background-color: #FFB87F;
+}
+
+/* Changelog */
+
+section#changelog h3 {
+	background-color: #FFEC72;
+}
+
+section#changelog p {
+	margin-top: 1em;
+}
+
+section#changelog li {
+	padding-left: 2em;
 }

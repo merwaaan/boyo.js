@@ -20,9 +20,7 @@ GAMES
 - MBC3
 - MBC4
 - MBC5
-- save/load (localStorage?)
 
 MISC
 - gamepad
 - nice UI
-- use arraybuffers instead of normal arrays (useful for 8bit/16bit aligned read/write)
