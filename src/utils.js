@@ -56,6 +56,13 @@ X.Utils = (function() {
       return ('000' + value.toString(16).toUpperCase()).substr(-4);
     },
 
+    bytes_to_string: function(bytes) {
+      var string = '';
+      for (var i = 0; i < bytes.length; ++i)
+        string +=String.fromCharCode(bytes[i]);
+      return string;
+    },
+
     inherit: function(SubClass, SuperClass) {
       SubClass.prototype = Object.create(SuperClass.prototype);
       SubClass.prototype.constructor = SubClass;

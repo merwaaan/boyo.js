@@ -75,7 +75,7 @@ X.Cartridge = (function() {
   };
 
   MBC1.prototype.w = function(address, value) {
-    if (address < 0x2000) { // XXX should check if there is RAM??
+    if (address < 0x2000) {
       this.ram_enabled = (value & 0xF) == 0xA;
     }
     else if (address < 0x4000) {
@@ -142,18 +142,43 @@ X.Cartridge = (function() {
 
   var ram_sizes = [0, 0x800, 0x2000, 0x20000];
 
+  var save_ram = function() {
+
+    // RAM data to base-64 string
+    var string = btoa(String.fromCharCode.apply(null, ram_data));
+
+    localStorage.setItem(X.Cartridge.title, string);
+  };
+
+  var restore_ram = function() {
+
+    var save = localStorage.getItem(X.Cartridge.title);
+
+    // Check if RAM for this cartridge has already been saved
+    if (!save) {
+      console.info('No RAM to restore')
+      return;
+    }
+
+    // Base-64 string to RAM data
+    ram_data.set(atob(save).split('').map(function(c) { return c.charCodeAt() }));
+
+    console.info('RAM restored');
+  };
+
   return {
 
     // TODO fix (no slice for typed arrays)
-    get title() { return _.map(data.slice(0x134, 0x144), function(x) { return String.fromCharCode(x); }).join('').replace(/\s+/g, ' '); },
-    get manufacturer() { return rom_data.slice(0x13F, 0x143); },
-    get licensee() { return rom_data.slice(0x144, 0x146); },
-    get destination() { return rom_data[0x14A]; },
+    get title() { return X.Utils.bytes_to_string(rom_data.subarray(0x134, 0x144)); },
+    get manufacturer() { return X.Utils.bytes_to_string(rom_data.subarray(0x13F, 0x143)); },
+    get licensee() { return X.Utils.bytes_to_string(rom_data.subarray(0x144, 0x146)); },
+    get destination() { return rom_data[0x14A] == 0 ? 'Japanese' : 'Non-Japanese'; },
     get version() { return rom_data[0x14C]; },
 
     get type() { return rom_data[0x147]; },
     get rom_size() { return 0x8000 << rom_data[0x148]; },
     get ram_size() { return ram_sizes[rom_data[0x149]]; },
+    get has_battery_ram() { return this.ram_size > 0 && mbcs[this.type][0].indexOf('BATTERY') > -1; },
 
     mbc: null,
 
@@ -167,21 +192,32 @@ X.Cartridge = (function() {
       ram = new ArrayBuffer(this.ram_size);
       ram_data = new Uint8Array(ram);
 
+      // Setup the appropriate memory bank controller
+
       var mbc_type = mbcs[this.type][1];
 
       if (!mbc_type) {
         this.ready = false;
         console.error(mbcs[this.type][0] + ' not supported yet');
+        return;
       }
-      else {
-        this.mbc = new mbc_type();
-        this.ready = true;
-        console.info('Loaded program ' + this.to_string());
+
+      this.mbc = new mbc_type();
+      this.ready = true;
+      console.info('Loaded program ' + this.to_string());
+
+      // Restore RAM if it is battery-backed
+
+      if (this.has_battery_ram) {
+        restore_ram();
       }
+
+      // Save RAM when the window is closed
+      window.addEventListener('unload', save_ram);
     },
 
     to_string: function() {
-      return '' + /*this.title +*/ ' [' + mbcs[this.type][0] + ']';
+      return '' + this.title + ' [' + mbcs[this.type][0] + ']';
     },
 
     r: function(address) {
