@@ -109,13 +109,12 @@ X.Cartridge = (function() {
   X.Utils.inherit(MBC2, MBC);
 
   MBC2.prototype.w = function(address, value) {
-    if (address < 0x2000) {
-      if (!X.Utils.bit(address, 4))
-        this.ram_enabled = (value & 0xF) == 0xA;
+    if (address < 0x2000 && !X.Utils.bit(address, 4)) {
+      this.ram_enabled = !this.ram_enabled;
     }
-    else if (address < 0x4000) {
-      if (X.Utils.bit(address, 4))
-        this.switch_rom_bank(value & 0xF);
+    else if (address < 0x4000 && X.Utils.bit(address, 4)) {
+      var rom_bank = value + (value == 0 ? 1 : 0) & 0xF;
+      this.switch_rom_bank(rom_bank);
     }
     else if (address > 0x9FFF && address < 0xA200) {
       if (this.ram_enabled)
