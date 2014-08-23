@@ -84,24 +84,42 @@ X.Cartridge = (function() {
       this.switch_rom_bank(rom_bank);
     }
     else if (address < 0x6000) {
-      if (this.mode == 0) {
+      if (this.mode == 0)
         this.switch_rom_bank(((value & 0x3) << 5) | (this.rom_bank & 0x1F));
-      }
-      else {
+      else
         this.switch_ram_bank(value & 0x3);
-      }
     }
     else if (address < 0x8000) {
       this.mode = value & 1;
-      if (this.mode == 0) {
+      if (this.mode == 0)
         this.switch_ram_bank(0);
-      }
-      else {
+      else
         this.switch_rom_bank(this.rom_bank & 0x1F);
-      }
     }
     else if (this.ram_enabled) {
       this.ram_bank_data[address - 0xA000] = value;
+    }
+  };
+
+  // MBC2
+
+  function MBC2() {
+    MBC.call(this);
+  }
+  X.Utils.inherit(MBC2, MBC);
+
+  MBC2.prototype.w = function(address, value) {
+    if (address < 0x2000) {
+      if (!X.Utils.bit(address, 4))
+        this.ram_enabled = (value & 0xF) == 0xA;
+    }
+    else if (address < 0x4000) {
+      if (X.Utils.bit(address, 4))
+        this.switch_rom_bank(value & 0xF);
+    }
+    else if (address > 0x9FFF && address < 0xA200) {
+      if (this.ram_enabled)
+        this.ram_bank_data[address - 0xA000] = value & 0xF;
     }
   };
 
@@ -113,8 +131,8 @@ X.Cartridge = (function() {
     0x01: ['MBC1', MBC1],
     0x02: ['MBC1+RAM', MBC1],
     0x03: ['MBC1+RAM+BATTERY', MBC1],
-    0x05: ['MBC2', NoMBC],
-    0x06: ['MBC2+BATTERY', NoMBC],
+    0x05: ['MBC2', MBC2],
+    0x06: ['MBC2+BATTERY', MBC2],
     0x08: ['ROM+RAM', NoMBC],
     0x09: ['ROM+RAM+BATTERY', NoMBC],
     0x0B: ['MMM01', undefined],
@@ -177,7 +195,7 @@ X.Cartridge = (function() {
 
     get type() { return rom_data[0x147]; },
     get rom_size() { return 0x8000 << rom_data[0x148]; },
-    get ram_size() { return ram_sizes[rom_data[0x149]]; },
+    get ram_size() { return this.type != 0x5 && this.type != 0x6 ? ram_sizes[rom_data[0x149]] : 0x200; },
     get has_battery_ram() { return this.ram_size > 0 && mbcs[this.type][0].indexOf('BATTERY') > -1; },
 
     mbc: null,
