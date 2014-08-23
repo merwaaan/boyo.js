@@ -34,11 +34,11 @@ X.Video = (function() {
     // STAT
 
     get STAT() { return X.Memory.r(0xFF41); },
-    get line_y_coincidence_interrupt() { return X.Utils.bit(this.STAT, 6); },
-    get oam_interrupt() { return X.Utils.bit(this.STAT, 5); },
-    get vblank_interrupt() { return X.Utils.bit(this.STAT, 4); },
-    get hblank_interrupt() { return X.Utils.bit(this.STAT, 3); },
-    get line_y_coincidence() { return X.Utils.bit(this.STAT, 2); }, set line_y_coincidence(x) { X.Memory.w(0xFF41, this.STAT & 0xFB | x) },
+    get lyc_interrupt() { return X.Utils.bit(this.STAT, 6); },
+    get mode2_interrupt() { return X.Utils.bit(this.STAT, 5); },
+    get mode1_interrupt() { return X.Utils.bit(this.STAT, 4); },
+    get mode0_interrupt() { return X.Utils.bit(this.STAT, 3); },
+    get lyc() { return X.Utils.bit(this.STAT, 2); }, set lyc(x) { X.Memory.w(0xFF41, this.STAT & 0xFB | x << 2) },
     get mode() { return this.STAT & 0x3; }, set mode(x) { X.Memory.w(0xFF41, this.STAT & 0x7C | x); },
 
     // Position and scrolling
@@ -84,6 +84,7 @@ X.Video = (function() {
         canvas_dom.webkitRequestFullScreen();
       });
       canvas = canvas_dom.getContext('2d');
+
       //
 
       for (var t = 0, l = this.cached_tiles.length; t < l; ++t) {
@@ -229,10 +230,19 @@ X.Video = (function() {
       this.mode_cycles -= this.mode_durations[this.mode];
       this.mode = m;
 
-      if (this.oam_interrupt && m == 2 ||
-          this.vblank_interrupt && m == 1 ||
-          this.hblank_interrupt && m == 0)
-        X.CPU.request_interrupt(1) // XXX can several really be requested at the same time?
+      // Watch for STAT interrupts
+      if (this.mode0_interrupt && m == 0 ||
+          this.mode1_interrupt && m == 1 ||
+          this.mode2_interrupt && m == 2)
+        X.CPU.request_interrupt(1);
+    },
+
+    check_line_coincidence: function() {
+
+      this.lyc = this.line_y == this.line_y_compare;
+
+      if (this.lyc && this.lyc_interrupt)
+        X.CPU.request_interrupt(1);
     },
 
     step: function(cycles) {
@@ -251,22 +261,18 @@ X.Video = (function() {
             else {
               this.change_mode(2);
               ++this.line_y;
-
-              // Check line coincidence
-              if (this.line_y == this.line_y_compare) {
-                this.line_y_coincidence = true;
-                if (this.line_y_coincidence_interrupt)
-                  X.CPU.request_interrupt(1);
-              }
+              this.check_line_coincidence();
             }
           }
           break;
 
         case 1: // V-Blank
+          // line_y comparison during v-blank???
           this.line_y = 145 + Math.floor(this.mode_cycles/456);
           if (this.mode_cycles > this.mode_durations[1]) {
             this.change_mode(2);
             this.line_y = 0;
+            this.check_line_coincidence();
           }
           break;
 
