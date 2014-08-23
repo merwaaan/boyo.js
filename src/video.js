@@ -17,6 +17,14 @@ X.Video = (function() {
     return true;
   };
 
+  var preset_palettes = [
+    [0xFFFFFF, 0XAAAAAA, 0x505050, 0x000000], // Grayscale
+    [0xC4CfA1, 0x8B956D, 0x4D533C, 0x1F1F1F], // Beige-ish
+    [0xBED264, 0x80964E, 0x425B38, 0x042022], // Yellow-ish
+    [0xDEBAD6, 0xDE7FC9, 0xF645CF, 0x8D2876], // Pink
+    [0x000000, 0x505050, 0XAAAAAA, 0xFFFFFF], // Inverted grayscale
+  ];
+
   return {
 
     // LCD control
@@ -53,15 +61,10 @@ X.Video = (function() {
     // Palettes
 
     get bg_palette() { return X.Memory.r(0xFF47); },
-    get obj_palette_0() { return X.Memory.r(0xFF48); },
-    get obj_palette_1() { return X.Memory.r(0xFF49); },
+    get obj0_palette() { return X.Memory.r(0xFF48); },
+    get obj1_palette() { return X.Memory.r(0xFF49); },
 
-    colors: [
-      [0xFF, 0xFF, 0xFF, 0xFF],
-      [0xAA, 0xAA, 0xAA, 0xFF],
-      [0x50, 0x50, 0x50, 0xFF],
-      [0, 0, 0, 0xFF]
-    ],
+    colors: [[], [], [], []],
 
     init: function() {
 
@@ -85,13 +88,46 @@ X.Video = (function() {
       });
       canvas = canvas_dom.getContext('2d');
 
-      //
+      // Fill the cached tiles
 
       for (var t = 0, l = this.cached_tiles.length; t < l; ++t) {
         var pixels = new Array(64);
         X.Utils.fill(pixels);
         this.cached_tiles[t] = pixels;
       }
+
+      //
+
+
+      // Add a palette selection option in the settings
+
+      for (var i in preset_palettes) {
+        var preset = preset_palettes[i];
+
+        var container = document.createElement('span');
+        container.className = 'palette';
+
+        (function() {
+          var p = preset, c = container;
+          c.addEventListener('click', function() {
+            this.change_palette(p);
+            var previous = document.querySelector('.palette.selected');
+            if (previous) previous.className = 'palette';
+            c.className += ' selected';
+          }.bind(this));
+        }.bind(this))();
+
+        for (var j in preset) {
+          var color = preset[j];
+          var square = container.appendChild(document.createElement('span'));
+          square.className = 'square';
+          square.style.backgroundColor = '#' + (color >> 16 & 0xFF).toString(16) + (color >> 8 & 0xFF).toString(16) + (color & 0xFF).toString(16);
+        }
+
+        document.querySelector('section#settings').appendChild(container);
+      }
+
+      document.querySelectorAll('.palette')[2].click();
     },
 
     reset: function() {
@@ -99,7 +135,7 @@ X.Video = (function() {
       X.Renderer.reset();
 
       // Cache default palettes to begin with
-      _.each(['bg', 'obj_0', 'obj_1'], function(palette) {
+      _.each(['bg', 'obj0', 'obj1'], function(palette) {
         this.cached_palettes[palette] = [X.Video.colors[0], X.Video.colors[1], X.Video.colors[2], X.Video.colors[3]];
       }, this);
 
@@ -174,10 +210,25 @@ X.Video = (function() {
       *
       */
 
+    change_palette: function(colors) {
+
+      for (var i in colors) {
+        var color = colors[i];
+        this.colors[i][0] = color >> 16 & 0xFF;
+        this.colors[i][1] = color >> 8 & 0xFF;
+        this.colors[i][2] = color & 0xFF;
+        this.colors[i][3] = 0xFF;
+      }
+
+      this.update_cached_palette(0xFF47, this.bg_palette);
+      this.update_cached_palette(0xFF48, this.obj0_palette);
+      this.update_cached_palette(0xFF49, this.obj1_palette);
+    },
+
     cached_palettes: {
       bg: [],
-      obj_0: [],
-      obj_1: []
+      obj0: [],
+      obj1: []
     },
 
     update_cached_palette: function(address, value) {
@@ -185,8 +236,8 @@ X.Video = (function() {
       var palette;
       switch (address) {
         case 0xFF47: palette = 'bg'; break;
-        case 0xFF48: palette = 'obj_0'; break;
-        case 0xFF49: palette = 'obj_1'; break;
+        case 0xFF48: palette = 'obj0'; break;
+        case 0xFF49: palette = 'obj1'; break;
       }
 
       for (var b = 0; b < 4; ++b) {
@@ -404,7 +455,7 @@ X.Renderer = (function() {
         var obj_above = X.Utils.bit(attributes, 7);
         var flip_y = X.Utils.bit(attributes, 6);
         var flip_x = X.Utils.bit(attributes, 5);
-        var palette = X.Utils.bit(attributes, 4) ? X.Video.cached_palettes.obj_1 : X.Video.cached_palettes.obj_0;
+        var palette = X.Utils.bit(attributes, 4) ? X.Video.cached_palettes.obj1 : X.Video.cached_palettes.obj0;
 
         var tile_size = X.Video.obj_size == 8 ? 1 : 2;
 

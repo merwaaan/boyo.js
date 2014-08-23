@@ -89,11 +89,27 @@ body > section:target {
 /* Settings */
 
 section#settings {
-	background-color: gray;
 }
 
 section#settings h3 {
 	background-color: #75D9B4;
+}
+
+section#settings .palette {
+	display: inline-block;
+	margin-right: 0.5em;
+	height: 1em;
+	border: 1px solid lightgray;
+}
+
+section#settings .palette.selected {
+	border: 1px solid red;
+}
+
+section#settings .palette .square {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
 }
 
 /* Debugger */
