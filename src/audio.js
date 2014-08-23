@@ -129,7 +129,7 @@ X.Audio = (function() {
     if (this.trigger) {
       this.length_counter.enabled = 1;
       if (this.length_counter.counter === 0) {
-        this.length_counter.counter = 64;
+        this.length_counter.counter = 0x3f;
       }
 
       this.oscillator.frequency.value = 131072 / (2048 - this.frequency);
