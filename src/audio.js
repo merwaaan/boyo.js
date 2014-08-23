@@ -56,13 +56,13 @@ X.Audio = (function() {
     this.volume.connect(audio.destination);
   };
 
-  Channel.prototype.step = function() {
+  Channel.prototype.step = function(elapsed) {
     // Length Counter
     var l = this.length_counter;
 
     if (l.counter > 0) {
       // Clocked at 256Hz
-      l.counter -= (1 / 60) / (1 / 256);
+      l.counter -= elapsed / (1 / 256);
       if (l.counter < 0) { l.counter = 0; }
 
       if (l.counter === 0) {
@@ -75,7 +75,7 @@ X.Audio = (function() {
     var e = this.envelope;
 
     // Clocked at 64Hz
-    e.timer -= (1 / 60) / (1 / 64);
+    e.timer -= elapsed / (1 / 64);
 
     if (e.timer <= 0 && e.period > 0) {
       e.timer = e.period;
@@ -189,12 +189,9 @@ X.Audio = (function() {
       sq2.init(audio);
     },
 
-    // Step is called at 60Hz.
-    // FIXME: We should really clock everything using a 512Hz timer
-    // for accuracy.
-    step: function() {
-      sq1.step();
-      sq2.step();
+    step: function(elapsed) {
+      sq1.step(elapsed);
+      sq2.step(elapsed);
     },
 
     reset: function() {

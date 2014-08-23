@@ -82,6 +82,8 @@ X.GB = (function() {
 
       stats.begin();
 
+      var tot_cycles = 0;
+
       // Emulate until a V-Blank or a breakpoint
       do {
 
@@ -94,12 +96,14 @@ X.GB = (function() {
 
         var cycles = X.CPU.step();
         var vblank = X.Video.step(cycles);
+        tot_cycles += cycles;
 
       } while (!vblank && cycles > 0);
 
-      stats.end();
+      var elapsed = tot_cycles / 4194304;
+      X.Audio.step(elapsed);
 
-      X.Audio.step();
+      stats.end();
 
       // Repeat...
       if (this.running)
