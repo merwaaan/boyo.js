@@ -59,7 +59,8 @@ X.Cartridge = (function() {
     return address < 0x8000 ? rom_data[address] : ram_data[address - 0xA000];
   };
   NoMBC.prototype.w = function(address, value) {
-    return address < 0x8000 ? rom_data[address] = value : ram_data[address - 0xA000] = value;
+    if (address > 0x9FFF)
+      ram_data[address - 0xA000] = value;
   };
 
   // MBC1
@@ -100,9 +101,8 @@ X.Cartridge = (function() {
       }
     }
     else if (this.ram_enabled) {
-      return this.ram_bank_data[address - 0xA000] = value;
+      this.ram_bank_data[address - 0xA000] = value;
     }
-    return 0;
   };
 
   //

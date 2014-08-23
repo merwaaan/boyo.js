@@ -1,3 +1,2 @@
 - Blargg's cpu_instrs: emulator STOPs from 3rd to last test (but the tests continue in a normal manner and pass when STOP is terminated by a keypress)
-- Motocross Maniacs: HALTs after bootstrap
 - Super mario Land 2: crashes on first screen
