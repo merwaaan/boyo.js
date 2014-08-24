@@ -9,11 +9,12 @@ VIDEO
 AUDIO
 - Square channels
   - sweep for channel 1
-- Wave channel
-- Noise channel
-- Master volume
+- Noise channel (speed and correct frequency)
 - Power control
 - Blargg's tests
+- Button for toggling channels
+- Band-limited synthesis
+- Linear interpolation
 
 GAMES
 - MBC2
