@@ -6,6 +6,8 @@ X.GB = (function() {
 
   var stats;
 
+  var prev_time;
+
   return {
 
     running: false,
@@ -78,11 +80,9 @@ X.GB = (function() {
       X.Debugger.reset();
     },
 
-    frame: function() {
+    frame: function(time) {
 
       stats.begin();
-
-      var tot_cycles = 0;
 
       // Emulate until a V-Blank or a breakpoint
       do {
@@ -96,12 +96,14 @@ X.GB = (function() {
 
         var cycles = X.CPU.step();
         var vblank = X.Video.step(cycles);
-        tot_cycles += cycles;
 
       } while (!vblank && cycles > 0);
 
-      var elapsed = tot_cycles / 4194304;
-      X.Audio.step(elapsed);
+      if (prev_time) {
+        var elapsed = (time - prev_time) / 1000;
+        X.Audio.step(elapsed);
+      }
+      prev_time = time;
 
       stats.end();
 
@@ -113,7 +115,7 @@ X.GB = (function() {
     run: function() {
       if (!this.running) {
         this.running = true;
-        this.frame();
+        requestAnimationFrame(this.frame.bind(this));
       }
     },
 
