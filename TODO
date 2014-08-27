@@ -3,8 +3,7 @@ CPU
 
 VIDEO
 - sprite priority
-- custom palettes
-- sync sprite drawing with scanlines
+- sync sprite drawing with scanlines (could solve bugs with tricky effects?)
 
 AUDIO
 - Square channels
@@ -17,12 +16,13 @@ AUDIO
 - Linear interpolation
 
 GAMES
-- MBC2
 - MBC3
-- MBC4
 - MBC5
+- reset cleanly between roms
 
 MISC
 - gamepad
 - nice UI
 - put dissemianted UI scripts in some specific module
+- show saved games in menu (with delete option)
+- bypass bootstrap
