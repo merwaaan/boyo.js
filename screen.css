@@ -68,22 +68,74 @@ div#game table td {
 	padding: 0 2em;
 }
 
-/* Accordion */
-
-body > section {
-	width: 70%;
-	height: 2em;
+body {
 	overflow: hidden;
-	margin: auto;
 }
 
-body > section h3 {
+/* Menu */
+
+aside {
+	width: 50%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	right: -54%;
+	padding: 2%;
+	background-color: #F0F0F0;
+	transition: right 0.3s ease-out;
+}
+
+aside > span#expand_button {
+	padding: 0.5em;
+	position: absolute;
+	left: -40px;
+	top: 100px;
+	transform: rotate(-90deg);
+	display: inline-block;
+	background-color: #F0F0F0;
+}
+
+aside:hover {
+	right: 0;
+	transition: right 0.3s ease-out;
+}
+
+/* First level categories */
+
+aside > section h3 {
 	line-height: 2em;
 	padding-left: 0.5em;
+	cursor: pointer;
 }
 
-body > section:target {
+aside > section {
+	height: 2em;
+	overflow: hidden;
+	background-color: white
+}
+
+aside > section.expanded {
 	height: auto;
+	transition: height 1s;
+}
+
+/* Second level */
+
+aside > section > section h4 {
+	line-height: 1em;
+	padding: 0.3em;
+	padding-left: 1em;
+	cursor: pointer;
+}
+
+aside > section > section {
+	height: 1.6em;
+	overflow: hidden;
+}
+
+aside > section > section.expanded {
+	height: auto;
+	transition: height 1s;
 }
 
 /* Settings */
@@ -93,6 +145,10 @@ section#settings {
 
 section#settings h3 {
 	background-color: #75D9B4;
+}
+
+section#settings h4 {
+	background-color: #ADD9C9;
 }
 
 section#settings .palette {
@@ -122,6 +178,10 @@ section#debugger h3 {
 	background-color: #F2896F;
 }
 
+section#debugger h4 {
+	background-color: #F2B5A6;
+}
+
 section#debugger table {
 	border: 1px solid black;
 	border-collapse: collapse;
@@ -136,7 +196,6 @@ section#buttons button {
 }
 
 section#registers, section#flags, section#memory, section#breakpoints {
-	display: inline-block;
 	vertical-align: top;
 }
 
@@ -174,6 +233,10 @@ section#about h3 {
 
 section#changelog h3 {
 	background-color: #FFEC72;
+}
+
+section#changelog h4 {
+	background-color: #FFF4Ac;
 }
 
 section#changelog p {

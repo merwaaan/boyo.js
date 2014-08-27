@@ -73,96 +73,124 @@
 
   </div>
 
-  <section id="settings">
+  <aside>
 
-    <h3><a href="#settings">Settings</a></h3>
+    <span id="expand_button">MENU</span>
 
-  </section>
+    <section id="settings">
+      <h3>Settings</h3>
 
-  <section id="debugger">
+      <section id="palettes">
+        <h4>Palettes</h4>
+      </section>
 
-    <h3><a href="#debugger">Debugger</a></h3>
+      <section id="sound">
+        <h4>Sound</h4>
+        <input type="checkbox" name="sq1"/><label>sq1</label>
+        <input type="checkbox" name="sq2"/><label>sq2</label>
+        <input type="checkbox" name="wave"/><label>wave</label>
+        <input type="checkbox" name="noise"/><label>noise</label>
+        (not plugged in)
+      </section>
 
-    <section id="buttons">
-      <button>Pause</button>
-      <button>Step</button>
-      <button>Run</button>
     </section>
 
-    <section id="registers">
-      <table>
-        <tr><td>AF</td><td></td></tr>
-        <tr><td>BC</td><td></td></tr>
-        <tr><td>DE</td><td></td></tr>
-        <tr><td>HL</td><td></td></tr>
-        <tr><td>SP</td><td></td></tr>
-        <tr><td>PC</td><td></td></tr>
-      </table>
+    <section id="debugger">
+      <h3>Debugger</h3>
+
+      <section id="buttons">
+        <button>Pause</button>
+        <button>Step</button>
+        <button>Run</button>
+      </section>
+
+      <section id="registers">
+        <h4>Registers</h4>
+        <table>
+          <tr><td>AF</td><td></td></tr>
+          <tr><td>BC</td><td></td></tr>
+          <tr><td>DE</td><td></td></tr>
+          <tr><td>HL</td><td></td></tr>
+          <tr><td>SP</td><td></td></tr>
+          <tr><td>PC</td><td></td></tr>
+        </table>
+        <div id="flags">
+          <input type="checkbox" name="zero"/><label>Z</label>
+          <input type="checkbox" name="addsub"/><label>N</label>
+          <input type="checkbox" name="halfcarry"/><label>H</label>
+          <input type="checkbox" name="carry"/><label>C</label>
+        </div>
+      </section>
+
+      <section id="memory">
+        <h4>Memory</h4>
+        <input type="text" name="address" value="0"/>
+        <button name="go_to_address">Go to address</button>
+        <table>
+        </table>
+      </section>
+
+      <section id="breakpoints">
+        <h4>Breakpoints</h4>
+        <input type="text" name="breakpoint"/>
+        <button name="add_breakpoint">Add breakpoint</button>
+        <ul>
+        </ul>
+      </section>
+
+      <section id="video">
+        <h4>Graphics</h4>
+        <canvas width="128" height="192" id="tile_data"></canvas>
+        <canvas width="256" height="256" id="background_map_0"></canvas>
+        <canvas width="256" height="256" id="background_map_1"></canvas>
+        <table id="oam"></table>
+      </section>
+
     </section>
 
-    <section id="flags">
-      <input type="checkbox" name="zero"/><label>Z</label>
-      <input type="checkbox" name="addsub"/><label>N</label>
-      <input type="checkbox" name="halfcarry"/><label>H</label>
-      <input type="checkbox" name="carry"/><label>C</label>
+    <section id="about">
+      <h3>About</h3>
+
+      <p>TODO</p>
+
     </section>
 
-    <section id="memory">
-      <input type="text" name="address" value="0"/>
-      <button name="go_to_address">Go to address</button>
-      <table>
-      </table>
+    <section id="changelog">
+      <h3>Changelog</h3>
+
+      <section>
+        <h4>0.2</h4>
+        <ul>
+          <li>Sound</li>
+          <li>Battery-backed RAM saved with localStorage</li>
+          <li>TODO more mBCs</li>
+          <li>TODO UI</li>
+        </ul>
+      </section>
+
+      <section>
+        <h4>0.1</h4>
+        <ul>
+          <li>CPU: instruction set, interrupts, timers</li>
+          <li>LCD: background, window and sprite display</li>
+          <li>MBC: none, MBC1</li>
+          <li>Debugger: registers, memory, tile data, bakground maps, OAM</li>
+          <li>Joypad input through keyboard</li>
+        </ul>
+      </section>
+
     </section>
 
-    <section id="breakpoints">
-      <input type="text" name="breakpoint"/>
-      <button name="add_breakpoint">Add breakpoint</button>
-      <ul>
-      </ul>
-    </section>
-
-    <section id="video">
-      <canvas width="128" height="192" id="tile_data"></canvas>
-      <canvas width="256" height="256" id="background_map_0"></canvas>
-      <canvas width="256" height="256" id="background_map_1"></canvas>
-      <table id="oam"></table>
-    </section>
-
-    <div id="log"></div>
-
-  </section>
-
-  <section id="about">
-
-    <h3><a href="#about">About</a></h3>
-
-    <p>TODO</p>
-
-  </section>
-
-  <section id="changelog">
-
-    <h3><a href="#changelog">Changelog</a></h3>
-
-    <p>0.2</p>
-    <ul>
-      <li>Sound</li>
-      <li>Battery-backed RAM saved with localStorage</li>
-      <li>TODO more mBCs</li>
-      <li>TODO UI</li>
-    </ul>
-
-    <p>0.1</p>
-    <ul>
-      <li>CPU: instruction set, interrupts, timers</li>
-      <li>LCD: background, window and sprite display</li>
-      <li>MBC: none, MBC1</li>
-      <li>Debugger: registers, memory, tile data, bakground maps, OAM</li>
-      <li>Joypad input through keyboard</li>
-    </ul>
-  </section>
+  </aside>
 
   <script>
+
+    var sections = document.querySelectorAll('aside > section h3, aside > section > section h4');
+    for (var i = 0; i < sections.length; ++i) {
+      sections[i].addEventListener('click', function() {
+        this.parentNode.className = this.parentNode.className == 'expanded' ? '' : 'expanded';
+      });
+    }
     // Initialize Boyo!
     window.addEventListener('load', function() {
       X.GB.init();

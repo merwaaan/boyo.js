@@ -124,7 +124,7 @@ X.Video = (function() {
           square.style.backgroundColor = '#' + (color >> 16 & 0xFF).toString(16) + (color >> 8 & 0xFF).toString(16) + (color & 0xFF).toString(16);
         }
 
-        document.querySelector('section#settings').appendChild(container);
+        document.querySelector('section#settings section#palettes').appendChild(container);
       }
 
       document.querySelectorAll('.palette')[2].click();
