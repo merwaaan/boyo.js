@@ -4,3 +4,6 @@
 - oh!: trashed graphics in several sequences
 - 20y: freezes at second sequence
 - Demon Blood: arrows over pistol not moving
+- Final Fantasy Adventure (Seiken Densetsu): won’t go past Nintendo logo
+- Gargoyle’s Quest: Garbled title screen and stops on “Start offset
+  is too large” at cartridge.js:33.
