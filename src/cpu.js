@@ -174,7 +174,7 @@ X.CPU = (function() {
           opcode = 0x100 + X.Memory.r(this.PC + 1);
 
         var instruction = this.instructions[opcode];
-        if (instruction === undefined ||instruction === null) console.log(opcode, this.PC);
+        if (instruction === undefined || instruction === null) console.log(opcode, this.PC);
         var bytes = instruction.bytes;
         var operands = X.Memory.r_(this.PC + (cb_prefix ? 2 : 1), bytes - (cb_prefix ? 2 : 1));
 

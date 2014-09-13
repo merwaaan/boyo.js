@@ -47,6 +47,7 @@ canvas {
 /* Game */
 
 div#game {
+	width: 50%;
 	text-align: center;
 }
 
