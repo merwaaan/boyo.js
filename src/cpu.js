@@ -153,7 +153,9 @@ X.CPU = (function() {
 
     reset: function() {
 
-      this.PC = 0; // TODO propose choice
+      this.PC = 0x100;
+      this.SP = 0xFFFE;
+
       this.halted = false;
       this.stopped = false;
     },

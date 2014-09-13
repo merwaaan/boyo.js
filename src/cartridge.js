@@ -91,10 +91,10 @@ X.Cartridge = (function() {
     }
     else if (address < 0x8000) {
       this.mode = value & 1;
-      if (this.mode == 0)
+      /*if (this.mode == 0)
         this.switch_ram_bank(0);
       else
-        this.switch_rom_bank(this.rom_bank & 0x1F);
+        this.switch_rom_bank(this.rom_bank & 0x1F);*/
     }
     else if (this.ram_enabled) {
       this.ram_bank_data[address - 0xA000] = value;
