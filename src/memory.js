@@ -74,7 +74,7 @@ X.Memory = (function() {
       map_range(0xC000, 0xDFFF, {r: function(a){return wram_data[a-0xC000]}, w: function(a,v){wram_data[a-0xC000]=v}}); // WRAM
       map_range(0xE000, 0xFDFF, {r: function(a){return wram_data[a-0xC000]}, w: function(a,v){wram_data[a-0xC000]=v}}); // WRAM echo
       map_range(0xFE00, 0xFE9F, X.Video); // OAM
-      map_range(0xFEA0, 0xFEFF, {r: function(a){return nouse_data[a-0xFEA0]}, w: function(a,v){console.log('echo');nouse_data[a-0xFEA0]=v}}); // Not used (supposedly)
+      map_range(0xFEA0, 0xFEFF, {r: function(a){return nouse_data[a-0xFEA0]}, w: function(a,v){nouse_data[a-0xFEA0]=v}}); // Not used (supposedly)
       map_range(0xFF00, 0xFF7F, {r: function(a){return io_data[a-0xFF00]}, w: function(a,v){io_data[a-0xFF00]=v}}); // IO
       map_range(0xFF80, 0xFFFF, {r: function(a){return hram_data[a-0xFF80]}, w: function(a,v){hram_data[a-0xFF80]=v}}); // HRAM
 

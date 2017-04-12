@@ -95,15 +95,10 @@ X.GB = (function() {
         }
 
         var cycles = X.CPU.step();
+        X.Audio.step(cycles);
         var vblank = X.Video.step(cycles);
 
       } while (!vblank && cycles > 0);
-
-      if (prev_time) {
-        var elapsed = (time - prev_time) / 1000;
-        X.Audio.step(elapsed);
-      }
-      prev_time = time;
 
       stats.end();
 
