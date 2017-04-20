@@ -6,7 +6,8 @@ X.GB = (function() {
 
   var stats;
 
-  var prev_time;
+  var last_frame_time = 0;
+  var leftover_cycles = 0;
 
   return {
 
@@ -78,15 +79,23 @@ X.GB = (function() {
       X.Audio.reset();
       X.Joypad.reset();
       X.Debugger.reset();
+
+      leftover_cycles = 0;
     },
 
-    frame: function(time) {
+    frame: function(now) {
+      // Compute time elapsed since the last frame
+      var dt = now - (last_frame_time || now);
+      last_frame_time = now;
+
+      // How many cycles to emulate based on the elapsed time since the last
+      // frame.  We add to keep track of the fractional part between calls.
+      leftover_cycles += dt * X.Constants.cpu_freq / 1000;
 
       stats.begin();
 
-      // Emulate until a V-Blank or a breakpoint
+      // Emulate all leftover cycles or until a breakpoint has been reached
       do {
-
         if (X.Debugger.reached_breakpoint()) {
           this.running = false;
           X.Debugger.update();
@@ -95,10 +104,11 @@ X.GB = (function() {
         }
 
         var cycles = X.CPU.step();
-        X.Audio.step(cycles);
-        var vblank = X.Video.step(cycles);
+        X.Audio.run(cycles);
+        X.Video.step(cycles);
 
-      } while (!vblank && cycles > 0);
+        leftover_cycles -= cycles;
+      } while (leftover_cycles > 0);
 
       stats.end();
 
@@ -110,6 +120,7 @@ X.GB = (function() {
     run: function() {
       if (!this.running) {
         this.running = true;
+        last_frame_time = window.performance.now();
         requestAnimationFrame(this.frame.bind(this));
       }
     },
