@@ -702,7 +702,7 @@ X.InstructionSet = (function() {
 
         var instruction = generate_instruction(opcode, specs);
 
-        console.info('Generated instruction ' + (opcode > 0xFF ? 'CB ' : '') + X.Utils.hex8(opcode) + ': ' + instruction.to_string());
+        // console.info('Generated instruction ' + (opcode > 0xFF ? 'CB ' : '') + X.Utils.hex8(opcode) + ': ' + instruction.to_string());
 
         return instruction;
       });

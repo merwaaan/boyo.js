@@ -149,6 +149,7 @@ X.CPU = (function() {
 
       // Generate the instruction set
       this.instructions = X.InstructionSet.generate();
+      console.log(this.instructions.length, "instructions generated");
     },
 
     reset: function() {
