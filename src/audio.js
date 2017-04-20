@@ -791,7 +791,6 @@ X.Audio = (function() {
     },
 
     reset: function() {
-      script_processor.connect(context.destination)
       apu_cycle_counter = 0
       apu_sample_counter = 0
       buffer_left.length = 0
@@ -816,6 +815,14 @@ X.Audio = (function() {
       }
       out.getChannelData(0).set(buffer_left.splice(0, out.length))
       out.getChannelData(1).set(buffer_right.splice(0, out.length))
+    },
+
+    pause: function() {
+      script_processor.disconnect(context.destination)
+    },
+
+    resume: function() {
+      script_processor.connect(context.destination)
     },
   }
 

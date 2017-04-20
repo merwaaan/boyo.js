@@ -8,6 +8,7 @@ X.GB = (function() {
 
   var last_frame_time = 0;
   var leftover_cycles = 0;
+  var animation_frame;
 
   return {
 
@@ -58,6 +59,15 @@ X.GB = (function() {
         };
 
         request.send(null);
+      });
+
+      // Stop running when tab has lost focus
+      document.addEventListener("visibilitychange", function(ev) {
+        if (document.hidden) {
+          X.GB.pause()
+        } else {
+          X.GB.run()
+        }
       });
 
       // FPS counter
@@ -114,19 +124,27 @@ X.GB = (function() {
 
       // Repeat...
       if (this.running)
-        requestAnimationFrame(this.frame.bind(this));
+        animation_frame = requestAnimationFrame(this.frame.bind(this));
     },
 
     run: function() {
       if (!this.running) {
         this.running = true;
         last_frame_time = window.performance.now();
-        requestAnimationFrame(this.frame.bind(this));
+        X.Audio.resume();
+        animation_frame = requestAnimationFrame(this.frame.bind(this));
       }
     },
 
     pause: function() {
-      this.running = false;
+      if (this.running) {
+        this.running = false;
+        X.Audio.pause();
+        if (animation_frame) {
+          cancelAnimationFrame(animation_frame);
+          animation_frame = null;
+        }
+      }
     },
 
     step: function() {
