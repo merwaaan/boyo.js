@@ -30,11 +30,14 @@ X.Joypad = (function() {
     init: function() {
 
       document.addEventListener('keydown', function(event) {
-        if (_.contains(_.flatten(codes), event.keyCode) && !keys[event.keyCode]) {
-          keys[event.keyCode] = true;
-          X.CPU.request_interrupt(4);
-          X.CPU.stopped = false; // Button presses terminate STOP
+        if (_.contains(_.flatten(codes), event.keyCode)) {
           event.preventDefault();
+
+          if (!keys[event.keyCode]) {
+            keys[event.keyCode] = true;
+            X.CPU.request_interrupt(4);
+            X.CPU.stopped = false; // Button presses terminate STOP
+          }
         }
       });
 
