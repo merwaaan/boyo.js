@@ -490,6 +490,12 @@ X.Audio = (function() {
     this.right_enable_noise = 0
     this.left_volume = 0
     this.right_volume = 0
+
+    // Frontend options
+    this.mute_pulse1 = false
+    this.mute_pulse2 = false
+    this.mute_wave = false
+    this.mute_noise = false
   }
 
   APU.prototype.read = function(address) {
@@ -668,10 +674,18 @@ X.Audio = (function() {
     var out = 0
 
     if (this.left_volume > 0) {
-      if (this.left_enable_pulse1) { out += this.pulse1.dac_output() }
-      if (this.left_enable_pulse2) { out += this.pulse2.dac_output() }
-      if (this.left_enable_wave) { out += this.wave.dac_output() }
-      if (this.left_enable_noise) { out += this.noise.dac_output() }
+      if (this.left_enable_pulse1 && !this.mute_pulse1) {
+        out += this.pulse1.dac_output()
+      }
+      if (this.left_enable_pulse2 && !this.mute_pulse2) {
+        out += this.pulse2.dac_output()
+      }
+      if (this.left_enable_wave && !this.mute_wave) {
+        out += this.wave.dac_output()
+      }
+      if (this.left_enable_noise && !this.mute_noise) {
+        out += this.noise.dac_output()
+      }
 
       // Normalize
       out /= 4
@@ -692,10 +706,18 @@ X.Audio = (function() {
     var out = 0
 
     if (this.right_volume > 0) {
-      if (this.right_enable_pulse1) { out += this.pulse1.dac_output() }
-      if (this.right_enable_pulse2) { out += this.pulse2.dac_output() }
-      if (this.right_enable_wave) { out += this.wave.dac_output() }
-      if (this.right_enable_noise) { out += this.noise.dac_output() }
+      if (this.right_enable_pulse1 && !this.mute_pulse1) {
+        out += this.pulse1.dac_output()
+      }
+      if (this.right_enable_pulse2 && !this.mute_pulse2) {
+        out += this.pulse2.dac_output()
+      }
+      if (this.right_enable_wave && !this.mute_wave) {
+        out += this.wave.dac_output()
+      }
+      if (this.right_enable_noise && !this.mute_noise) {
+        out += this.noise.dac_output()
+      }
 
       // Normalize
       out /= 4
@@ -731,6 +753,21 @@ X.Audio = (function() {
       context = new window.AudioContext()
       script_processor = context.createScriptProcessor(0, 0, 2)
       script_processor.onaudioprocess = X.Audio.callback
+
+      // Toggle individual channels in the option panel
+      document.getElementById('sound').addEventListener('click', function(ev) {
+        var channel = ev.target.name
+
+        if (channel == "pulse1") {
+          apu.mute_pulse1 = !ev.target.checked
+        } else if (channel == "pulse2") {
+          apu.mute_pulse2 = !ev.target.checked
+        } else if (channel == "wave") {
+          apu.mute_wave = !ev.target.checked
+        } else if (channel == "noise") {
+          apu.mute_noise = !ev.target.checked
+        }
+      })
     },
 
     play: function() {
