@@ -744,8 +744,12 @@ X.Audio = (function() {
   var buffer_right = []
   var script_processor
 
-  var last_callback = 0
-  var last_step = 0
+  // Assuming a 44100 sample rate
+  var sample_rate = 44100
+  var apu_cycles_per_sample = X.Constants.cpu_freq / sample_rate
+
+  var apu_cycle_counter = 0
+  var apu_sample_counter = 0
 
   return {
 
@@ -770,39 +774,28 @@ X.Audio = (function() {
       })
     },
 
-    play: function() {
-      var buf = context.createBuffer(2, buffer_left.length, 44100)
-      buf.getChannelData(0).set(buffer_left)
-      buf.getChannelData(1).set(buffer_right)
-      buffer_left.length = 0
-      buffer_right.length = 0
+    run: function(cycles) {
+      apu_cycle_counter += cycles
 
-      var source = context.createBufferSource()
-      source.buffer = buf
-      source.connect(context.destination)
-      source.start()
-    },
-
-    step: function(cycles) {
-      while (cycles > 0) {
+      while (apu_cycle_counter > 0) {
         apu.clock()
+        apu_cycle_counter--
+      }
 
-        // Downsample: push one sample every 95 cycle to reach the 44100 rate
-        if (apu.frame_seq % 95 == 0) {
-          // var now = window.performance.now()
-          // console.log("sample", (now - last_step) / 1000)
-          // last_step = now
-
-          buffer_left.push(apu.output_left())
-          buffer_right.push(apu.output_right())
-        }
-
-        cycles--
+      apu_sample_counter += cycles
+      while (apu_sample_counter >= apu_cycles_per_sample) {
+        buffer_left.push(apu.output_left())
+        buffer_right.push(apu.output_right())
+        apu_sample_counter -= apu_cycles_per_sample
       }
     },
 
     reset: function() {
       script_processor.connect(context.destination)
+      apu_cycle_counter = 0
+      apu_sample_counter = 0
+      buffer_left.length = 0
+      buffer_right.length = 0
     },
 
     r: function(address) {
@@ -814,18 +807,15 @@ X.Audio = (function() {
     },
 
     callback: function(ev) {
-      // console.log("callback", ev.playbackTime - last_callback)
-      // last_callback = ev.playbackTime
-
       var out = ev.outputBuffer
-      // console.log("audio callback wants %d bytes, audio buffer has %d",
-      //             out.length, buffer_left.length)
+      var delta = buffer_left.length - out.length
+      if (delta < 0) {
+        console.warn("Audio buffer underrun: %d samples", delta)
+      } else if (delta > (out.length * 2)) {
+        console.warn("Audio buffer overrun: %d samples", delta)
+      }
       out.getChannelData(0).set(buffer_left.splice(0, out.length))
       out.getChannelData(1).set(buffer_right.splice(0, out.length))
-    },
-
-    buffer: function() {
-      return buffer_left
     },
   }
 
