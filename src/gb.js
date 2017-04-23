@@ -9,6 +9,7 @@ X.GB = (function() {
   var last_frame_time = 0;
   var leftover_cycles = 0;
   var animation_frame;
+  var lagging_frames = 0;
 
   return {
 
@@ -72,13 +73,15 @@ X.GB = (function() {
 
       // FPS counter
 
-      stats = new Stats();
-      stats.setMode(0);
+      if (X.Constants.debug_fps_counter) {
+        stats = new Stats();
+        stats.setMode(0);
 
-      stats.domElement.style.position = 'absolute';
-      stats.domElement.style.top = '0';
-      stats.domElement.style.right = '0';
-      document.body.appendChild(stats.domElement);
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.top = '0';
+        stats.domElement.style.right = '0';
+        document.body.appendChild(stats.domElement);
+      }
     },
 
     reset: function() {
@@ -91,25 +94,34 @@ X.GB = (function() {
       X.Debugger.reset();
 
       leftover_cycles = 0;
+      lagging_frames = 0;
     },
 
     frame: function(now) {
       // Compute time elapsed since the last frame
-      var dt = now - (last_frame_time || now);
+      var dt = Math.max(now - (last_frame_time || now), 0);
       last_frame_time = now;
 
       // How many cycles to emulate based on the elapsed time since the last
       // frame.  We add to keep track of the fractional part between calls.
-      leftover_cycles += dt * X.Constants.cpu_freq / 1000;
+      var gb_cycles = dt * X.Constants.cpu_freq / 1000;
+      leftover_cycles += gb_cycles;
 
-      stats.begin();
+      if (X.Constants.debug_fps_counter) {
+        stats.begin();
+      }
+      if (X.Constants.debug_frame_stats) {
+        console.profile("frame");
+      }
+      var frame_cycles = 0;
+      var before_emu = window.performance.now();
 
       // Emulate all leftover cycles or until a breakpoint has been reached
-      do {
+      while (leftover_cycles > 0) {
         if (X.Debugger.reached_breakpoint()) {
           this.running = false;
           X.Debugger.update();
-          console.info('Breakpoint reached');
+          console.info('Break point reached');
           break;
         }
 
@@ -118,9 +130,36 @@ X.GB = (function() {
         X.Video.step(cycles);
 
         leftover_cycles -= cycles;
-      } while (leftover_cycles > 0);
+        frame_cycles += cycles;
+      }
 
-      stats.end();
+      var emu_time = window.performance.now() - before_emu;
+      var gb_time = frame_cycles / X.Constants.cpu_freq * 1000;
+
+      if (X.Constants.debug_fps_counter) {
+        stats.end();
+      }
+      if (X.Constants.debug_frame_stats) {
+        console.profileEnd();
+
+        console.group("Frame stats");
+        console.log("Real time since last frame: %sms", dt.toPrecision(4));
+        console.log("Cycles to emulate: %f", gb_cycles);
+        console.log("Cycles emulated: %d", frame_cycles);
+        console.log("GB time emulated: %sms", gb_time.toPrecision(4));
+        console.log("Time spent: %sms", emu_time.toPrecision(4));
+        console.groupEnd();
+      }
+
+      if (emu_time > gb_time) {
+        lagging_frames++;
+        if (lagging_frames >= 5) {
+          console.warn("Can't keep up emulation, pausing emulator");
+          X.GB.pause();
+        }
+      } else {
+        lagging_frames = 0;
+      }
 
       // Repeat...
       if (this.running)
