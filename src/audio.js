@@ -684,7 +684,7 @@ X.Audio = (function() {
         out += this.wave.dac_output()
       }
       if (this.left_enable_noise && !this.mute_noise) {
-        out += this.noise.dac_output()
+        out += this.noise.dac_output() / 2
       }
 
       // Normalize
@@ -716,7 +716,7 @@ X.Audio = (function() {
         out += this.wave.dac_output()
       }
       if (this.right_enable_noise && !this.mute_noise) {
-        out += this.noise.dac_output()
+        out += this.noise.dac_output() / 2
       }
 
       // Normalize
