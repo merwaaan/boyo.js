@@ -64,7 +64,7 @@ X.Audio = (function() {
       // NR14 | NR24
     case 0xff14:
     case 0xff19:
-      return self.length_enabled << 6
+      return this.length_enabled << 6
 
     default:
       console.error("Pulse.read: unknown address", X.Utils.hex16(addr))
@@ -378,7 +378,7 @@ X.Audio = (function() {
       this.volume_period =  value       & 0x7
 
       // The upper 5 bits of NRx2 control the DAC
-      this.dac_enabled = ((value >> 3) & 0x1F) > 0
+      this.dac_enabled = ((value & 0xF8) > 0)
 
       if (!this.dac_enabled) {
         this.enabled = 0
@@ -400,7 +400,7 @@ X.Audio = (function() {
     }
   }
 
-  var period_lookup = [4, 8, 16, 24, 32, 40, 48, 56]
+  var period_lookup = [8, 16, 32, 48, 64, 80, 96, 112]
 
   Noise.prototype.get_period = function() {
     return period_lookup[this.divisor_code] << this.clock_shift
@@ -414,7 +414,7 @@ X.Audio = (function() {
     }
 
     this.period = this.get_period()
-    this.lfsr = 0xFFFF
+    this.lfsr = 0x7FFF
 
     this.volume_counter = this.volume_period
     this.volume = this.volume_init
@@ -443,7 +443,7 @@ X.Audio = (function() {
 
     if (this.dac_enabled) {
       if (this.enabled) {
-        out = (~self.lfsr & 1) * this.volume
+        out = ((~this.lfsr) & 1) * this.volume
       } else {
         out = 0
       }
