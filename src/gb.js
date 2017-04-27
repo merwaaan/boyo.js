@@ -5,6 +5,7 @@ X.GB = (function() {
   'use strict';
 
   var stats;
+  var stats_gbps;
 
   var last_frame_time = 0;
   var leftover_cycles = 0;
@@ -35,16 +36,24 @@ X.GB = (function() {
       X.Joypad.init();
       X.Debugger.init();
 
-      // FPS counter
+      // Stats counter
 
-      if (X.Constants.debug_fps_counter) {
+      if (X.Constants.debug_stats_counter) {
         stats = new Stats();
-        stats.setMode(0);
 
-        stats.domElement.style.position = 'absolute';
-        stats.domElement.style.top = '0';
-        stats.domElement.style.right = '0';
-        document.body.appendChild(stats.domElement);
+        // Add a custom panel for GB time to real-time ratio
+        stats_gbps = stats.addPanel(new Stats.Panel('dGBPS', '#ff8', '#221'));
+
+        // Our custom panel is the last one, after memory if that is supported
+        var panel_id = self.performance && self.performance.memory ? 3 : 2;
+
+        // Show the custom panel by default
+        stats.showPanel(panel_id);
+
+        // Put the counter top-right
+        stats.dom.style.left = null;
+        stats.dom.style.right = '0';
+        document.body.appendChild(stats.dom);
       }
 
       // When a cartridge is inserted, turn on the GB and start emulating
@@ -175,14 +184,15 @@ X.GB = (function() {
       var gb_cycles = dt * X.Constants.cpu_freq / 1000;
       leftover_cycles += gb_cycles;
 
-      if (X.Constants.debug_fps_counter) {
-        stats.begin();
-      }
       if (X.Constants.debug_frame_stats) {
         console.profile("frame");
       }
       var frame_cycles = 0;
       var before_emu = window.performance.now();
+
+      if (X.Constants.debug_stats_counter) {
+        stats.begin();
+      }
 
       // Emulate all leftover cycles or until a breakpoint has been reached
       while (leftover_cycles > 0) {
@@ -201,12 +211,24 @@ X.GB = (function() {
         frame_cycles += cycles;
       }
 
+      // How long have we spent for emulating the cycles
       var emu_time = window.performance.now() - before_emu;
+
+      // How much GB time have we emulated
       var gb_time = frame_cycles / X.Constants.cpu_freq * 1000;
 
-      if (X.Constants.debug_fps_counter) {
+      // How many frames of GB could we emulate per second at the current rate?
+      var gbps = gb_time / emu_time;
+
+      if (X.Constants.debug_stats_counter) {
+        // GBPS can be Infinity if emu_time is 0
+        if (gbps < Infinity) {
+          // Multiply by 10 since Stats floors the value
+          stats_gbps.update(gbps * 10, 100);
+        }
         stats.end();
       }
+
       if (X.Constants.debug_frame_stats) {
         console.profileEnd();
 
@@ -219,7 +241,7 @@ X.GB = (function() {
         console.groupEnd();
       }
 
-      if (emu_time > gb_time) {
+      if (gbps < 1) {
         lagging_frames++;
         if (lagging_frames >= 5) {
           console.warn("Can't keep up emulation, pausing emulator");
