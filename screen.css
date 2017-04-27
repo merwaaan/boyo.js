@@ -46,26 +46,26 @@ canvas {
 
 /* Game */
 
-div#game {
+#game {
 	width: 50%;
 	text-align: center;
 }
 
-div#game canvas {
+#game canvas {
 	margin: 3em;
 	background-color: white;
 }
 
-div#game canvas:-webkit-full-screen {
+#game canvas:-webkit-full-screen {
 	width: 200%;
 }
 
-div#game table {
+#game table {
 	margin: auto;
 	margin-bottom: 2em;
 }
 
-div#game table td {
+#game table td {
 	padding: 0 2em;
 }
 
@@ -86,7 +86,7 @@ aside {
 	transition: right 0.3s ease-out;
 }
 
-aside > span#expand_button {
+aside > #expand_button {
 	padding: 0.5em;
 	position: absolute;
 	left: -40px;
@@ -141,29 +141,29 @@ aside > section > section.expanded {
 
 /* Settings */
 
-section#settings {
+#settings {
 }
 
-section#settings h3 {
+#settings h3 {
 	background-color: #75D9B4;
 }
 
-section#settings h4 {
+#settings h4 {
 	background-color: #ADD9C9;
 }
 
-section#settings .palette {
+#settings .palette {
 	display: inline-block;
 	margin-right: 0.5em;
 	height: 1em;
 	border: 1px solid lightgray;
 }
 
-section#settings .palette.selected {
+#settings .palette.selected {
 	border: 1px solid red;
 }
 
-section#settings .palette .square {
+#settings .palette .square {
 	display: inline-block;
 	width: 1em;
 	height: 1em;
@@ -171,79 +171,79 @@ section#settings .palette .square {
 
 /* Debugger */
 
-section#debugger {
+#debugger {
 	font-family: "Inconsolata";
 }
 
-section#debugger h3 {
+#debugger h3 {
 	background-color: #F2896F;
 }
 
-section#debugger h4 {
+#debugger h4 {
 	background-color: #F2B5A6;
 }
 
-section#debugger table {
+#debugger table {
 	border: 1px solid black;
 	border-collapse: collapse;
 }
 
-section#debugger table td {
+#debugger table td {
 	border: 1px solid black;
 }
 
-section#buttons button {
+#buttons button {
 	width: 4em;
 }
 
-section#registers, section#flags, section#memory, section#breakpoints {
+#registers, #flags, #memory, #breakpoints {
 	vertical-align: top;
 }
 
-section#flags label:after {
+#flags label:after {
 	content: "\000A";
 	white-space: pre;
 }
 
-section#video span {
+#video span {
 	position: relative;
 }
 
-section#video span canvas {
+#video span canvas {
 	position: absolute;
 	top: 0;
 	left: 0;
 };
 
-section#video canvas#tiles, section#video canvas#background, section#video table#oam {
+#video #tiles, #video #background, #video #oam {
 	display: inline-block;
 	vertical-align: top;
 }
 
-section#video table#oam span {
+#video #oam span {
 	padding-left: 0.2em;
 }
 
 /* About */
 
-section#about h3 {
+#about h3 {
 	background-color: #FFB87F;
 }
 
 /* Changelog */
 
-section#changelog h3 {
+#changelog h3 {
 	background-color: #FFEC72;
 }
 
-section#changelog h4 {
+#changelog h4 {
 	background-color: #FFF4Ac;
 }
 
-section#changelog p {
+#changelog p {
 	margin-top: 1em;
 }
 
-section#changelog li {
+#changelog li {
 	padding-left: 2em;
 }
