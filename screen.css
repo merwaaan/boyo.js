@@ -73,6 +73,12 @@ body {
 	overflow: hidden;
 }
 
+/* Controls */
+
+#controls {
+  margin-bottom: 2em;
+}
+
 /* Menu */
 
 aside {

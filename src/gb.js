@@ -11,9 +11,17 @@ X.GB = (function() {
   var animation_frame;
   var lagging_frames = 0;
 
+  var toggle_button;
+
   return {
 
+    // Whether the GB is powered on
+    power: false,
+
+    // Whether we are emulating the GB
     running: false,
+    // Whether to resume from a tab switch
+    was_running: false,
 
     init: function() {
 
@@ -26,51 +34,6 @@ X.GB = (function() {
       X.Joypad.init();
       X.Debugger.init();
 
-      // Reset the console when a game is inserted
-
-      var gb = this;
-
-      var local_rom_select = document.querySelector('input#local_rom');
-      local_rom_select.selectedIndex = -1;
-      local_rom_select.addEventListener('change', function() {
-
-        var reader = new FileReader();
-        reader.addEventListener('load', function() {
-          gb.reset();
-          X.Cartridge.init(this.result);
-          if (X.Cartridge.ready && !gb.running) gb.run();
-        });
-
-        reader.readAsArrayBuffer(this.files[0]);
-      });
-
-      var hosted_rom_select = document.querySelector('select#hosted_rom');
-      hosted_rom_select.addEventListener('change', function(event) {
-
-        var name = event.target.selectedOptions[0].textContent;
-
-        var request = new XMLHttpRequest();
-        request.open('GET', 'roms/' + name + '.gb', true);
-        request.responseType = 'arraybuffer';
-
-        request.onload = function() {
-          gb.reset();
-          X.Cartridge.init(request.response);
-          if (X.Cartridge.ready && !gb.running) gb.run();
-        };
-
-        request.send(null);
-      });
-
-      // Stop running when tab has lost focus
-      document.addEventListener("visibilitychange", function(ev) {
-        if (document.hidden) {
-          X.GB.pause()
-        } else {
-          X.GB.run()
-        }
-      });
-
       // FPS counter
 
       if (X.Constants.debug_fps_counter) {
@@ -82,9 +45,104 @@ X.GB = (function() {
         stats.domElement.style.right = '0';
         document.body.appendChild(stats.domElement);
       }
+
+      // When a cartridge is inserted, turn on the GB and start emulating
+
+      var gb = this;
+
+      function load_and_run(cartridge) {
+        X.Cartridge.init(cartridge);
+        gb.power = true;
+        gb.reset();
+        gb.resume();
+      }
+
+      // Setup listeners for ROM loading
+
+      var local_rom_select = document.getElementById('local_rom');
+      local_rom_select.selectedIndex = -1;
+      local_rom_select.addEventListener('change', function() {
+        var reader = new FileReader();
+        reader.addEventListener('load', function() {
+          load_and_run(this.result);
+        });
+        reader.readAsArrayBuffer(this.files[0]);
+      });
+
+      var hosted_rom_select = document.getElementById('hosted_rom');
+      hosted_rom_select.addEventListener('change', function(event) {
+
+        var name = event.target.selectedOptions[0].textContent;
+
+        var request = new XMLHttpRequest();
+        request.open('GET', 'roms/' + name + '.gb', true);
+        request.responseType = 'arraybuffer';
+        request.onload = function() {
+          load_and_run(request.response)
+        };
+        request.send(null);
+      });
+
+      // Pause emulation when tab has lost focus
+      document.addEventListener("visibilitychange", function(ev) {
+        if (document.hidden) {
+          gb.was_running = gb.running
+          gb.pause()
+        } else {
+          if (gb.was_running) {
+            gb.resume()
+          }
+        }
+      });
+
+      // Toggle the emulator state when the button is clicked
+      toggle_button = document.getElementById('emulator-toggle');
+      toggle_button.addEventListener('click', function() {
+        if (gb.running) {
+          gb.pause();
+        } else {
+          gb.resume();
+        }
+      });
     },
 
+    // Pause emulation
+    pause: function() {
+      if (this.running) {
+        this.running = false;
+
+        // Cancel audio and video callbacks
+        X.Audio.pause();
+        if (animation_frame) {
+          cancelAnimationFrame(animation_frame);
+          animation_frame = null;
+        }
+
+        // Update toggle button
+        toggle_button.textContent = "Resume";
+      }
+    },
+
+    // Resume emulation
+    resume: function() {
+      if (!this.running) {
+        this.running = true;
+
+        // Plug back audio and video callbacks
+        X.Audio.resume();
+        last_frame_time = window.performance.now();
+        animation_frame = requestAnimationFrame(this.frame.bind(this));
+
+        // Update toggle button
+        toggle_button.textContent = "Pause";
+        toggle_button.disabled = false;
+      }
+    },
+
+    // Clean up all state and restart emulation as if the GB had been powered
+    // off and on.
     reset: function() {
+      this.gb_power = false;
 
       X.Memory.reset();
       X.CPU.reset();
@@ -95,6 +153,8 @@ X.GB = (function() {
 
       leftover_cycles = 0;
       lagging_frames = 0;
+
+      this.gb_power = true;
     },
 
     frame: function(now) {
@@ -164,26 +224,6 @@ X.GB = (function() {
       // Repeat...
       if (this.running)
         animation_frame = requestAnimationFrame(this.frame.bind(this));
-    },
-
-    run: function() {
-      if (!this.running) {
-        this.running = true;
-        last_frame_time = window.performance.now();
-        X.Audio.resume();
-        animation_frame = requestAnimationFrame(this.frame.bind(this));
-      }
-    },
-
-    pause: function() {
-      if (this.running) {
-        this.running = false;
-        X.Audio.pause();
-        if (animation_frame) {
-          cancelAnimationFrame(animation_frame);
-          animation_frame = null;
-        }
-      }
     },
 
     step: function() {

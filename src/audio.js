@@ -862,9 +862,9 @@ X.Audio = (function() {
     reset: function() {
       apu_cycle_counter = 0
       apu_sample_counter = 0
-      buffer_left.length = 0
-      buffer_right.length = 0
+      this.empty_buffers()
     },
+
 
     r: function(address) {
       return apu.read(address)
@@ -887,11 +887,24 @@ X.Audio = (function() {
     },
 
     pause: function() {
-      script_processor.disconnect(context.destination)
+      // Try-catch to catch errors if it was already disconnected
+      try {
+        script_processor.disconnect()
+      } catch (ex) {}
     },
 
     resume: function() {
+      // If we pause and disconnect without emptying buffers, we will run into
+      // overruns.
+      this.empty_buffers();
+      // connect is idempotent from what I tested, so it's alright to call it in
+      // all cases
       script_processor.connect(context.destination)
+    },
+
+    empty_buffers: function() {
+      buffer_left.length = 0
+      buffer_right.length = 0
     },
   }
 
