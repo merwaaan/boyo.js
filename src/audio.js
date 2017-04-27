@@ -44,6 +44,29 @@ X.Audio = (function() {
     this.sweep_frequency_shadow = 0
   }
 
+  Pulse.prototype.reset = function() {
+    // FIXME: that may not be the value on boot
+    this.enabled = 0
+    this.dac_enabled = 0
+    this.period = 0
+    this.frequency = 0
+    this.duty = 2
+    this.duty_idx = 0
+    this.length_enabled = 0
+    this.length_counter = 0
+    this.volume = 0
+    this.volume_init = 0
+    this.volume_counter = 0
+    this.volume_period = 0
+    this.volume_sweep = 0
+    this.sweep_shift = 0
+    this.sweep_direction = 0
+    this.sweep_period = 0
+    this.sweep_counter = 0
+    this.sweep_enabled = 0
+    this.sweep_frequency_shadow = 0
+  }
+
   Pulse.prototype.read = function(addr) {
     switch (addr) {
       // NR10
@@ -278,6 +301,21 @@ X.Audio = (function() {
     this.sample_buffer = 0
   }
 
+  Wave.prototype.reset = function() {
+    // FIXME: that may not be the value on boot
+    this.enabled = 0
+    this.dac_enabled = 0
+    this.period = 0
+    this.frequency = 0
+    this.length_enabled = 0
+    this.length_counter = 0
+    this.volume = 0
+    this.samples = [0,0,0,0,0,0,0,0,
+                    0,0,0,0,0,0,0,0]
+    this.sample_nibble = 0
+    this.sample_buffer = 0
+  }
+
   Wave.prototype.read = function(address) {
     var out = 0
 
@@ -395,6 +433,24 @@ X.Audio = (function() {
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   function Noise() {
+    this.enabled = 0
+    this.dac_enabled = 0
+    this.period = 0
+    this.clock_shift = 0
+    this.width_mode = 0
+    this.divisor_code = 0
+    this.lfsr = 0
+    this.length_enabled = 0
+    this.length_counter = 0
+    this.volume = 0
+    this.volume_init = 0
+    this.volume_counter = 0
+    this.volume_period = 0
+    this.volume_sweep = 0
+  }
+
+  Noise.prototype.reset = function() {
+    // FIXME: that may not be the value on boot
     this.enabled = 0
     this.dac_enabled = 0
     this.period = 0
@@ -565,6 +621,27 @@ X.Audio = (function() {
     this.mute_pulse2 = false
     this.mute_wave = false
     this.mute_noise = false
+  }
+
+  APU.prototype.reset = function() {
+    // FIXME: that may not be the value on boot
+    this.enabled = 0
+    this.pulse1.reset()
+    this.pulse2.reset()
+    this.wave.reset()
+    this.noise.reset()
+    this.frame_seq = 0
+    this.frame = 0
+    this.left_enable_pulse1 = 0
+    this.left_enable_pulse2 = 0
+    this.left_enable_wave = 0
+    this.left_enable_noise = 0
+    this.right_enable_pulse1 = 0
+    this.right_enable_pulse2 = 0
+    this.right_enable_wave = 0
+    this.right_enable_noise = 0
+    this.left_volume = 0
+    this.right_volume = 0
   }
 
   APU.prototype.read = function(address) {
@@ -862,6 +939,7 @@ X.Audio = (function() {
     reset: function() {
       apu_cycle_counter = 0
       apu_sample_counter = 0
+      apu.reset()
       this.empty_buffers()
     },
 

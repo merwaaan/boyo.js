@@ -85,7 +85,11 @@ X.Memory = (function() {
     },
 
     reset: function() {
-
+      // Clear all RAM
+      wram_data.fill(0);
+      io_data.fill(0);
+      nouse_data.fill(0);
+      hram_data.fill(0);
     }
 
   };

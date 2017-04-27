@@ -99,9 +99,6 @@ X.Video = (function() {
         this.cached_tiles[t] = pixels;
       }
 
-      //
-
-
       // Add a palette selection option in the settings
 
       for (var i in preset_palettes) {
@@ -143,6 +140,11 @@ X.Video = (function() {
       }, this);
 
       this.mode = 2; // Really??
+
+      // Clear RAM; don't need to clean tile_data and background_maps since they
+      // are views into vram
+      vram_data.fill(0);
+      oam_data.fill(0);
     },
 
     /**
@@ -371,7 +373,8 @@ X.Renderer = (function() {
     },
 
     reset: function() {
-
+      // Clear canvas
+      canvas.clearRect(0, 0, canvas.canvas.width, canvas.canvas.height);
     },
 
     scan_background: function(y) {

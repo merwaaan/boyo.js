@@ -12,6 +12,7 @@ X.GB = (function() {
   var lagging_frames = 0;
 
   var toggle_button;
+  var reset_button;
 
   return {
 
@@ -104,6 +105,12 @@ X.GB = (function() {
           gb.resume();
         }
       });
+
+      // A reset button is faster than reselecting the ROM
+      reset_button = document.getElementById('gb-reset');
+      reset_button.addEventListener('click', function() {
+        gb.reset();
+      });
     },
 
     // Pause emulation
@@ -151,6 +158,7 @@ X.GB = (function() {
       X.Joypad.reset();
       X.Debugger.reset();
 
+      last_frame_time = 0;
       leftover_cycles = 0;
       lagging_frames = 0;
 
