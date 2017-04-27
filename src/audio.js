@@ -36,13 +36,21 @@ X.Audio = (function() {
     this.volume_counter = 0
     this.volume_period = 0
     this.volume_sweep = 0
+    this.sweep_shift = 0
+    this.sweep_direction = 0
+    this.sweep_period = 0
+    this.sweep_counter = 0
+    this.sweep_enabled = 0
+    this.sweep_frequency_shadow = 0
   }
 
   Pulse.prototype.read = function(addr) {
     switch (addr) {
       // NR10
     case 0xff10:
-      return 0
+      return this.sweep_period << 4
+        | this.sweep_direction << 3
+        | this.sweep_shift
 
       // NR11 | NR21
     case 0xff11:
@@ -76,6 +84,9 @@ X.Audio = (function() {
     switch (addr) {
       // NR10
     case 0xff10:
+      this.sweep_period    = (w >> 4) & 0x7
+      this.sweep_direction = (w >> 3) & 0x1
+      this.sweep_shift     =  w       & 0x7
       break
 
       // NR11 | NR21
@@ -133,6 +144,34 @@ X.Audio = (function() {
 
     this.volume_counter = this.volume_period
     this.volume = this.volume_init
+
+    // Pulse 1 frequency is copied to the shadow register
+    this.sweep_frequency_shadow = this.frequency
+    // The sweep timer is reloaded
+    this.sweep_counter = this.sweep_period
+    // The internal enabled flag is set if either the sweep period or shift are
+    // non-zero, cleared otherwise
+    this.sweep_enabled = this.sweep_period > 0 || this.sweep_shift > 0
+
+    // If the sweep shift is non-zero, frequency calculation and the overflow
+    // check are performed immediately
+    if (this.sweep_shift > 0) {
+      // The overflow check simply calculates the new frequency and if this is
+      // greater than 2047, the channel is disabled
+      if (this.sweep_compute_frequency() > 2047) {
+        this.enabled = 0
+      }
+    }
+  }
+
+  Pulse.prototype.sweep_compute_frequency = function() {
+    // Frequency calculation consists of taking the value in the frequency
+    // shadow register, shifting it right by sweep shift, optionally negating
+    // the value (if direction is 1), and summing this with the frequency shadow
+    // register
+    var shadow = this.sweep_frequency_shadow
+    var d = shadow >> this.sweep_shift
+    return shadow + (this.sweep_direction ? -d : +d)
   }
 
   Pulse.prototype.clock_length = function() {
@@ -159,7 +198,37 @@ X.Audio = (function() {
   }
 
   Pulse.prototype.clock_sweep = function() {
-    // TODO:
+    if (this.sweep_counter > 0) {
+      this.sweep_counter--
+    } else {
+      this.sweep_counter = this.sweep_period
+
+      // When the sweep timer generates a clock and the sweep's internal enabled
+      // flag is set and the sweep period is not zero
+      if (this.sweep_enabled && this.sweep_period > 0) {
+
+        // a new frequency is calculated and the overflow check is performed
+        var new_freq = this.sweep_compute_frequency()
+
+        // The overflow check simply calculates the new frequency and if this is
+        // greater than 2047, the channel is disabled
+        if (this.sweep_compute_frequency() > 2047) {
+          this.enabled = 0
+        } else if (this.sweep_shift > 0) {
+          // If the new frequency is 2047 or less and the sweep shift is not
+          // zero, this new frequency is written back to the shadow frequency
+          // and pulse 1's frequency
+          this.sweep_frequency_shadow = new_freq
+          this.frequency = new_freq
+
+          // then frequency calculation and overflow check are run AGAIN using
+          // this new value, but this second new frequency is not written back
+          if (this.sweep_compute_frequency() > 2047) {
+            this.enabled = 0
+          }
+        }
+      }
+    }
   }
 
   Pulse.prototype.clock_frequency = function() {
