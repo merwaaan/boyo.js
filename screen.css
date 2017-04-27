@@ -32,11 +32,6 @@ header h3 {
 	color: lightgray;
 }
 
-a {
-	text-decoration: none;
-	color: black;
-}
-
 canvas {
 	image-rendering: -moz-crisp-edges;
 	image-rendering: -o-crisp-edges;
@@ -234,6 +229,10 @@ aside > section > section.expanded {
 
 #about h3 {
 	background-color: #FFB87F;
+}
+
+#about p {
+  margin: 1em .5em;
 }
 
 /* Changelog */
