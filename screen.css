@@ -27,6 +27,13 @@ header h2 {
 	font-size: 1em;
 }
 
+header h2 a {
+	color: #AAAAAA;
+}
+header h2 a:hover {
+	color: deeppink;
+}
+
 header h3 {
 	font-size: 0.8em;
 	color: lightgray;
