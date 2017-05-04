@@ -138,6 +138,39 @@ X.Video = (function() {
       // are views into vram
       vram_data.fill(0);
       oam_data.fill(0);
+
+      this.display_enable = 0;
+      this.window_tile_map = 0;
+      this.window_enable = 0;
+      this.bg_window_tile_data = 0;
+      this.bg_tile_map = 0;
+      this.obj_size= 0;
+      this.obj_enable= 0;
+      this.bg_enable= 0;
+
+      // STAT
+
+      this.lyc_interrupt= 0;
+      this.mode2_interrupt= 0;
+      this.mode1_interrupt= 0;
+      this.mode0_interrupt= 0;
+      this.lyc= 0;
+      this.mode= 0;
+
+      // Position and scrolling
+
+      this.scroll_y= 0;
+      this.scroll_x= 0;
+      this.line_y= 0;
+      this.line_y_compare= 0;
+      this.window_y= 0;
+      this.window_x= 0;
+
+      // Palettes
+
+      this.bg_palette= 0;
+      this.obj0_palette= 0;
+      this.obj1_palette= 0;
     },
 
     /**
