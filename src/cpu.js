@@ -34,12 +34,59 @@ X.CPU = (function() {
       * Timer and divider
       */
 
-    get DIV() { return X.Memory.r(0xFF04); }, set DIV(x) { X.Memory.w(0xFF04, x); },
-    get TIMA() { return X.Memory.r(0xFF05); }, set TIMA(x) { X.Memory.w(0xFF05, x); },
-    get TMA() { return X.Memory.r(0xFF06); },
-    get TAC() { return X.Memory.r(0xFF07); },
-    get timer_enable() { return X.Utils.bit(this.TAC, 2); },
-    get timer_clock() { return this.TAC & 0x3; },
+    DIV: 0,
+    TIMA: 0,
+    TMA: 0,
+    timer_enable: 0,
+    timer_clock: 0,
+
+    read: function(address) {
+      switch (address) {
+      case 0xFF04:
+        return this.DIV;
+
+      case 0xFF05:
+        return this.TIMA;
+
+      case 0xFF06:
+        return this.TMA;
+
+      case 0xFF07:
+        return this.timer_enable << 2
+          | this.timer_clock;
+
+      case 0xFF0F:
+        return this.interrupt_request;
+
+      case 0xFFFF:
+        return this.interrupt_enable;
+
+      default:
+        throw new Error("read: unmapped address " + X.Utils.hex16(address));
+        return 0;
+      }
+    },
+
+    write: function(address, value) {
+      switch (address) {
+      case 0xFF04:
+        this.DIV = 0;
+        break;
+
+      case 0xFF06:
+        this.TMA = value;
+        break;
+
+      case 0xFF07:
+        this.timer_enable = (value >> 2) & 1;
+        this.timer_clock = value & 3;
+        break;
+
+      case 0xFFFF:
+        this.interrupt_enable = value;
+        break;
+      }
+    },
 
     update_timers: function(cycles) {
 
@@ -73,8 +120,8 @@ X.CPU = (function() {
     stopped: false,
 
     interrupt_master_enable: true,
-    get interrupt_enable() { return X.Memory.r(0xFFFF); },
-    get interrupt_request() { return X.Memory.r(0xFF0F); }, set interrupt_request(x) { X.Memory.w(0xFF0F, x); },
+    // get interrupt_enable() { return X.Memory.r(0xFFFF); },
+    // get interrupt_request() { return X.Memory.r(0xFF0F); }, set interrupt_request(x) { X.Memory.w(0xFF0F, x); },
 
     request_interrupt: function(bit) {
       this.interrupt_request |= 1 << bit;

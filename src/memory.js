@@ -4,17 +4,6 @@ X.Memory = (function() {
 
   'use strict';
 
-  var mapping = [];
-
-  var map = function(address, ref) {
-    mapping[address] = ref;
-  };
-
-  var map_range = function(start_address, end_address, ref) {
-    for (var a = start_address; a <= end_address; ++a)
-      mapping[a] = ref;
-  };
-
   var wram, wram_data;
   var nouse, nouse_data;
   var io, io_data;
@@ -23,12 +12,129 @@ X.Memory = (function() {
   return {
 
     r: function(address) {
+      if (address < 0x8000) {
+        // ROM
+        return X.Cartridge.r(address);
+      }
+      else if (address < 0xA000) {
+        // VRAM
+        return X.Video.read_vram(address);
+      }
+      else if (address < 0xC000) {
+        // RAM
+        return X.Cartridge.r(address);
+      }
+      else if (address < 0xE000) {
+        // WRAM
+        return wram_data[address - 0xC000];
+      }
+      else if (address < 0xFE00) {
+        // WRAM echo
+        return wram_data[address - 0xE000];
+      }
+      else if (address < 0xFEA0) {
+        // OAM
+        return X.Video.read_oam(address);
+      }
+      else if (address < 0xFF00) {
+        // Not used (supposedly)
+        return nouse_data[address - 0xFEA0];
+      }
+      else if (address == 0xFF00) {
+        // Joypad
+        return X.Joypad.r(address);
+      }
+      else if (address < 0xFF10) {
+        // misc IO
+        return X.CPU.read(address);
+        // return io_data[address - 0xFF00];
+      }
+      else if (address < 0xFF40) {
+        // Audio
+        return X.Audio.r(address);
+      }
+      else if (address < 0xFF4C) {
+        // Video
+        return X.Video.read_io(address);
+      }
+      else if (address < 0xFF80) {
+        // misc IO
+        return io_data[address - 0xFF00];
+      }
+      else if (address < 0xFFFF) {
+        // HRAM
+        return hram_data[address - 0xFF80];
+      }
+      else if (address == 0xFFFF) {
+        // Interrupts
+        return X.CPU.read(address);
+      }
+      else {
+        throw new Error("read: Unmapped address: " + X.Utils.hex16(address));
+      }
+    },
 
-      if (mapping[address] && mapping[address].r)
-        return mapping[address].r(address);
-
-      console.error('Unmapped address (r): ' + X.Utils.hex16(address));
-      return 0;
+    w: function(address, value) {
+      if (address < 0x8000) {
+        // ROM
+        X.Cartridge.w(address, value);
+      }
+      else if (address < 0xA000) {
+        // VRAM
+        X.Video.write_vram(address, value);
+      }
+      else if (address < 0xC000) {
+        // RAM
+        X.Cartridge.w(address, value);
+      }
+      else if (address < 0xE000) {
+        // WRAM
+        wram_data[address - 0xC000] = value;
+      }
+      else if (address < 0xFE00) {
+        // WRAM echo
+        wram_data[address - 0xE000] = value;
+      }
+      else if (address < 0xFEA0) {
+        // OAM
+        X.Video.write_oam(address, value);
+      }
+      else if (address < 0xFF00) {
+        // Not used (supposedly)
+        nouse_data[address - 0xFEA0] = value;
+      }
+      else if (address == 0xFF00) {
+        // Joypad
+        X.Joypad.w(address, value);
+      }
+      else if (address < 0xFF10) {
+        // misc IO
+        X.CPU.write(address, value);
+        // io_data[address - 0xFF00] = value;
+      }
+      else if (address < 0xFF40) {
+        // Audio
+        X.Audio.w(address, value);
+      }
+      else if (address < 0xFF4C) {
+        // Video
+        X.Video.write_io(address, value);
+      }
+      else if (address < 0xFF80) {
+        // misc IO
+        io_data[address - 0xFF00] = value;
+      }
+      else if (address < 0xFFFF) {
+        // HRAM
+        hram_data[address - 0xFF80] = value;
+      }
+      else if (address == 0xFFFF) {
+        // Interrupts
+        X.CPU.write(address, value);
+      }
+      else {
+        throw new Error("write: Unmapped address: " + X.Utils.hex16(address));
+      }
     },
 
     r_: function(address, length) {
@@ -42,17 +148,9 @@ X.Memory = (function() {
       return slice;
     },
 
-    w: function(address, value) {
-
-      if (mapping[address] && mapping[address].w)
-        mapping[address].w(address, value);
-      else
-        console.error('Unmapped address (w): ' + X.Utils.hex16(address));
-    },
-
     init: function() {
 
-      //
+      // Init
 
       wram = new ArrayBuffer(0x2000);
       wram_data = new Uint8Array(wram);
@@ -65,23 +163,6 @@ X.Memory = (function() {
 
       hram = new ArrayBuffer(0x80);
       hram_data = new Uint8Array(hram);
-
-      // Map main ranges + specific registers
-
-      map_range(0x0000, 0x7FFF, X.Cartridge); // ROM
-      map_range(0x8000, 0x9FFF, X.Video); // VRAM
-      map_range(0xA000, 0xBFFF, X.Cartridge); // RAM
-      map_range(0xC000, 0xDFFF, {r: function(a){return wram_data[a-0xC000]}, w: function(a,v){wram_data[a-0xC000]=v}}); // WRAM
-      map_range(0xE000, 0xFDFF, {r: function(a){return wram_data[a-0xC000]}, w: function(a,v){wram_data[a-0xC000]=v}}); // WRAM echo
-      map_range(0xFE00, 0xFE9F, X.Video); // OAM
-      map_range(0xFEA0, 0xFEFF, {r: function(a){return nouse_data[a-0xFEA0]}, w: function(a,v){nouse_data[a-0xFEA0]=v}}); // Not used (supposedly)
-      map_range(0xFF00, 0xFF7F, {r: function(a){return io_data[a-0xFF00]}, w: function(a,v){io_data[a-0xFF00]=v}}); // IO
-      map_range(0xFF80, 0xFFFF, {r: function(a){return hram_data[a-0xFF80]}, w: function(a,v){hram_data[a-0xFF80]=v}}); // HRAM
-
-      map(0xFF00, X.Joypad); // Joypad
-      map_range(0xFF10, 0xFF3F, X.Audio); // Audio
-      map(0xFF46, {w: function(a,v){X.Video.dma_transfer(v)}}); // DMA transfer
-      map_range(0xFF47, 0xFF49, {r: function(a){return io_data[a-0xFF00]}, w: function(a,v){X.Video.update_cached_palette(a,v); io_data[a-0xFF00]=v;}}); // Palettes
     },
 
     reset: function() {
